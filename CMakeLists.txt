@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(CSVProcessor)
+project(NormalizeText)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +12,7 @@ else()
 endif()
 
 # List all source files
-add_executable(CSVProcessor 
+add_executable(NormalizeCSV 
     main.cpp 
     replacement.cpp
     language_detector/language_detector.cpp

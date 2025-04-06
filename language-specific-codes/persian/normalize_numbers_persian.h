@@ -36,8 +36,8 @@ inline NormalizedNumber normalize(const std::string& input) {
     for(size_t i = 0; i < input.size(); ) {
         char c = input[i];
         
-        // Handle thousand separators (both comma and Persian/arabic comma)
-        if(c == ',' || c == 0x060C) { // 0x060C is Persian/Arabic comma
+        // Handle thousand separators (comma)
+        if(c == ',') {
             // Only allow commas every 3 digits before decimal
             if(decimal_point_found || 
                (result.integer_part.length() % 3 != 0 && !result.integer_part.empty())) {
