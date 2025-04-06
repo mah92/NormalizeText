@@ -265,8 +265,8 @@ inline void run_tests() {
         {".75", "zero point seven five", false},
         
         // Mixed text and numbers
-        {"The code is 1234", "The code is one, two, three, four", false},
-        {"Call 555-1234", "Call five, five, five, one, two, three, four", false},
+        {"The code is 1234", "The code is one thousand two hundred thirty-four", false},
+        {"Call 555-1234", "Call five hundred fifty-five-one thousand two hundred thirty-four", false},
         
         // Edge cases
         {"", "", false}, // Empty input

@@ -185,52 +185,42 @@ inline std::string number_to_words(const std::string& normalized) {
     if (normalized == "0") return "صفر";
     
     std::vector<std::string> groups = split_into_groups(normalized);
-    std::reverse(groups.begin(), groups.end());
+    std::reverse(groups.begin(), groups.end()); // Reverse groups to process highest first
     
     const std::vector<std::string> scales = {"", "هزار", "میلیون", "میلیارد", "تریلیون"};
-    std::string result;
+    std::vector<std::string> group_words;
     
     for (size_t i = 0; i < groups.size(); ++i) {
         int num = std::stoi(groups[i]);
         if (num == 0) continue;
         
         std::string words = group_to_words(num);
-        if (!words.empty()) {
-            size_t scale_idx = groups.size() - 1 - i;
-            
-            // Apply scale first
-            if (scale_idx < scales.size() && !scales[scale_idx].empty()) {
-                if (scale_idx == 1) {  // هزار
-                    if (num == 1) {
-                        words = "هزار";
-                    } else if (num == 2) {
-                        words = "دو هزار";
-                    } else {
-                        words = words + " " + scales[scale_idx];
-                    }
+        size_t scale_idx = groups.size() - 1 - i;
+        
+        if (scale_idx < scales.size() && !scales[scale_idx].empty()) {
+            if (scale_idx == 1) {  // هزار
+                if (num == 1) {
+                    words = "هزار";
+                } else if (num == 2) {
+                    words = "دو هزار";
                 } else {
-                    words = words + " " + scales[scale_idx];
-                }
-            }
-            
-            // Combine with previous parts
-            if (!result.empty()) {
-                // For Persian, higher scales come first
-                if (scale_idx > 0) {
-                    result = words + " و " + result;
-                } else {
-                    result = result + " و " + words;
+                    words += " " + scales[scale_idx];
                 }
             } else {
-                result = words;
+                words += " " + scales[scale_idx];
             }
         }
+        
+        group_words.push_back(words);
     }
     
-    // Clean up any double "و" that might have been created
-    size_t pos;
-    while ((pos = result.find(" و  و ")) != std::string::npos) {
-        result.replace(pos, 6, " و ");
+    // Combine groups in order
+    std::string result;
+    for (const auto& group : group_words) {
+        if (!result.empty()) {
+            result += " و ";
+        }
+        result += group;
     }
     
     return result;

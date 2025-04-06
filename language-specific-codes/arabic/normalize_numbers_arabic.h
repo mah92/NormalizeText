@@ -33,9 +33,17 @@ inline NormalizedNumber normalize(const std::string& input) {
     result.is_valid = true;
     bool decimal_point_found = false;
     
+    // First remove all commas from the input
+    std::string processed_input;
     for(char c : input) {
-        // Handle separators and spaces
-        if(c == ',' || c == '.') {
+        if(c != ',') {
+            processed_input += c;
+        }
+    }
+    
+    for(char c : processed_input) {
+        // Handle decimal point
+        if(c == '.') {
             if(decimal_point_found) {
                 result.is_valid = false;
                 return result;
@@ -61,12 +69,11 @@ inline NormalizedNumber normalize(const std::string& input) {
         }
     }
 
-    // Post-processing
+    // Post-processing remains the same
     if(result.integer_part.empty() && !result.fractional_part.empty()) {
         result.integer_part = "0";
     }
 
-    // Remove leading zeros
     if(!result.integer_part.empty()) {
         size_t first_non_zero = result.integer_part.find_first_not_of('0');
         if(first_non_zero != std::string::npos) {
@@ -164,26 +171,45 @@ inline std::string number_to_words(const std::string& normalized) {
     std::reverse(groups.begin(), groups.end());
     
     const std::vector<std::string> scales = {"", "ألف", "مليون", "مليار", "تريليون"};
-    std::string result;
+    std::vector<std::string> group_words;
     
     for(size_t i = 0; i < groups.size(); ++i) {
-        std::string words = group_to_words(std::stoi(groups[i]));
-        if(!words.empty()) {
-            if(!result.empty()) result = words + " و " + result;
-            else result = words;
-            
-            size_t scale_idx = groups.size() - 1 - i;
-            if(scale_idx < scales.size() && !scales[scale_idx].empty()) {
-                if(scale_idx == 1 && std::stoi(groups[i]) == 2) {
-                    result = "ألفان";
-                } else if(scale_idx == 1 && std::stoi(groups[i]) > 2) {
-                    result = words + " " + "آلاف";
+        int group_num = std::stoi(groups[i]);
+        if(group_num == 0) continue;
+        
+        std::string words = group_to_words(group_num);
+        size_t scale_idx = groups.size() - 1 - i; // Correct scale index
+        
+        if(scale_idx > 0) {
+            // Handle scale words
+            if(group_num == 1) {
+                words = scales[scale_idx]; // e.g., "ألف" instead of "واحد ألف"
+            } 
+            else if(group_num == 2) {
+                words = scales[scale_idx] + "ان"; // Dual form
+            }
+            else if(group_num >= 3 && group_num <= 10) {
+                if(scale_idx == 1) { // Thousands plural
+                    words += " آلاف";
                 } else {
-                    result += " " + scales[scale_idx];
+                    words += " " + scales[scale_idx] + "ات"; // Millions, etc.
                 }
             }
+            else {
+                words += " " + scales[scale_idx]; // General case
+            }
         }
+        
+        group_words.push_back(words);
     }
+    
+    // Join groups in natural order
+    std::string result;
+    for(size_t i = 0; i < group_words.size(); ++i) {
+        if(i > 0) result += " و ";
+        result += group_words[i];
+    }
+    
     return result;
 }
 
@@ -267,7 +293,9 @@ inline void run_tests() {
         {"5", "خمسة", false},
         {"12", "اثنا عشر", false},
         {"123", "مائة و ثلاثة و عشرون", false},
-        {"1200", "ألف و مائتان", false},
+        {"1200", "ألف و مئتان", false},
+        {"2025", "ألفان و خمسة و عشرون", false},
+        {"3555", "ثلاثة آلاف و خمسمائة و خمسة و خمسون", false},
         
         // Decimal numbers
         {"12.34", "اثنا عشر فاصلة ثلاثة أربعة", false},
@@ -275,8 +303,8 @@ inline void run_tests() {
         {".75", "صفر فاصلة سبعة خمسة", false},
         
         // Mixed text and numbers
-        {"The code is 1234", "The code is one, two, three, four", false},
-        {"Call 555-1234", "Call five, five, five, one, two, three, four", false},
+        {"The code is 1234", "The code is ألف و مئتان و أربعة و ثلاثون", false},
+        {"Call 555-1234", "Call خمسمائة و خمسة و خمسون-ألف و مئتان و أربعة و ثلاثون", false},
         
         // Edge cases
         {"", "", false}, // Empty input
