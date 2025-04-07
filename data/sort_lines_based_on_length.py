@@ -15,5 +15,5 @@ def sort_lines_by_length(input_file, output_file=None):
         file.writelines(lines)
 
 # Example usage
-input_file = 'example.txt'  # Replace with your file path
+input_file = 'dataset_AR-EN.txt'  # Replace with your file path
 sort_lines_by_length(input_file)
