@@ -36,22 +36,19 @@ int main(int argc, char* argv[]) {
         // First remove all pipes from the entire line
         removeAllPipes(line);
         
-        // Now split into columns (using a different delimiter temporarily)
-        std::vector<std::string> columns = split(line, '\t');  // Using tab as temporary delimiter
+        // Process the line content
+        std::string processed = performReplacements(line);
         
-        if (!columns.empty()) {
-            // Process the last column
-            std::string processed = performReplacements(columns.back());
-            
-            // Remove any pipes that might have been in the original data
-            removeAllPipes(processed);
-            
-            // Add the processed text as a new column
-            columns.push_back(processed);
-            
-            // Write the modified line to output using pipe as delimiter
-            outputFile << join(columns, '|') << "\n";
-        }
+        // Remove any pipes that might have been in the processed data
+        removeAllPipes(processed);
+        
+        // Create a vector with original content (without pipes) and processed version
+        std::vector<std::string> columns;
+        columns.push_back(line);
+        columns.push_back(processed);
+        
+        // Write the modified line to output using pipe as delimiter
+        outputFile << join(columns, '|') << "\n";
     }
 
     inputFile.close();

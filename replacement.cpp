@@ -53,7 +53,7 @@ const std::vector<std::string> UNWANTED_UNICODE_CHARS = {
     // Add more here...
 };
 
-static const std::unordered_map<std::string, std::string> WORD_REPLACEMENTS = {
+static const std::unordered_map<std::string, std::string> GENERAL_WORD_REPLACEMENTS = {
     {"mrs", "misess"},
     {"mr", "mister"},
     {"dr", "doctor"},
@@ -76,100 +76,32 @@ static const std::unordered_map<std::string, std::string> WORD_REPLACEMENTS = {
     {"bit/s", "bits per second"},
     {"kbit/s", "kilo bits per second"},
     {"mbit/s", "mega bits per second"},
-    {"gbit/s", "giga bits per second"}
+    {"gbit/s", "giga bits per second"},
+
+    {"mp3", " m p 3"},
+    {"csv", " c s v"},
+    {"apk", " a p k"},
+
 };
 
-std::vector<std::string> split(const std::string& s, char delimiter) {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
+static const std::unordered_map<std::string, std::string> ARABIC_WORD_REPLACEMENTS = {
+    {" ص ", " صباحاً "},
+    {" م ", " مساءً "},
+};
 
-std::string join(const std::vector<std::string>& vec, char delimiter) {
-    std::string result;
-    for (size_t i = 0; i < vec.size(); ++i) {
-        if (i != 0) result += delimiter;
-        result += vec[i];
-    }
-    return result;
-}
+static const std::unordered_map<std::string, std::string> PERSIAN_WORD_REPLACEMENTS = {
+    {"ص.", "صفحه"},
+};
 
-std::string factorizeChineseLetters(const std::string& input) {
-    std::string result;
-    size_t pos = 0;
-    const std::string pattern = " chinese letter ";
-    const size_t pattern_length = pattern.length();
-    
-    while (pos < input.length()) {
-        size_t found = input.find(pattern, pos);
-        if (found == std::string::npos) {
-            result += input.substr(pos);
-            break;
-        }
-        
-        // Add the part before the match
-        result += input.substr(pos, found - pos);
-        
-        // Count consecutive occurrences
-        size_t count = 0;
-        while (found != std::string::npos && 
-               input.substr(found, pattern_length) == pattern) {
-            count++;
-            found += pattern_length;
-        }
-        
-        // Add the factorized version
-        if (count > 1) {
-            result += std::string(" ") + std::to_string(count) + " chinese letters ";
-        } else {
-            result += pattern;
-        }
-        
-        pos = found;
-    }
-    
-    return result;
-}
-
-std::wstring utf8_to_wstring(const std::string& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
-}
-
-std::string wstring_to_utf8(const std::wstring& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.to_bytes(str);
-}
-
-std::string toLower(const std::string& str) {
-    std::string lowerStr = str;
-    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
-        [](unsigned char c) { return std::tolower(c); });
-    return lowerStr;
-}
-
-void replaceHonorifics(std::string& result) {
-    std::string lowerResult = toLower(result);
-    size_t pos = 0;
-    
-    for (const auto& pair : WORD_REPLACEMENTS) {
-        pos = 0;
-        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
-            // Check if it's a whole word
-            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
-                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
-                // Replace with original case preserved where possible
-                result.replace(pos, pair.first.length(), pair.second);
-                lowerResult.replace(pos, pair.first.length(), pair.second);
-            }
-            pos += pair.first.length();
-        }
-    }
-}
+std::vector<std::string> split(const std::string& s, char delimiter);
+std::string join(const std::vector<std::string>& vec, char delimiter);
+std::string factorizeChineseLetters(const std::string& input);
+std::wstring utf8_to_wstring(const std::string& str);
+std::string wstring_to_utf8(const std::wstring& str);
+std::string toLower(const std::string& str);
+void replaceEnglishSpecificAbreviations(std::string& result);
+void replaceArabicSpecificAbreviations(std::string& result);
+void replacePersianSpecificAbreviations(std::string& result);
 
 std::string performReplacements(const std::string& input) {
     std::string result = input;
@@ -281,7 +213,7 @@ std::string performReplacements(const std::string& input) {
     result = factorizeChineseLetters(result);
 
     // Perform word replacements
-    replaceHonorifics(result);
+    replaceEnglishSpecificAbreviations(result);
 
     // convert to lowercase
     std::transform(result.begin(), result.end(), result.begin(),
@@ -301,7 +233,11 @@ std::string performReplacements(const std::string& input) {
             result = EnglishNumberConverter::to_english_text(result);
         } else if(language == Language::PERSIAN) {
             result = PersianNumberConverter::to_persian_text(result);
+            replacePersianSpecificAbreviations(result);
+
         } else { //(language == Language::ARABIC) {
+            replaceArabicSpecificAbreviations(result);
+
             result = ArabicNumberConverter::to_arabic_text(result);
         }
 
@@ -310,4 +246,134 @@ std::string performReplacements(const std::string& input) {
     result = LanguageDetector::reunite_segments(text_segments);
 
     return result;
+}
+
+std::vector<std::string> split(const std::string& s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+std::string join(const std::vector<std::string>& vec, char delimiter) {
+    std::string result;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (i != 0) result += delimiter;
+        result += vec[i];
+    }
+    return result;
+}
+
+std::string factorizeChineseLetters(const std::string& input) {
+    std::string result;
+    size_t pos = 0;
+    const std::string pattern = " chinese letter ";
+    const size_t pattern_length = pattern.length();
+    
+    while (pos < input.length()) {
+        size_t found = input.find(pattern, pos);
+        if (found == std::string::npos) {
+            result += input.substr(pos);
+            break;
+        }
+        
+        // Add the part before the match
+        result += input.substr(pos, found - pos);
+        
+        // Count consecutive occurrences
+        size_t count = 0;
+        while (found != std::string::npos && 
+               input.substr(found, pattern_length) == pattern) {
+            count++;
+            found += pattern_length;
+        }
+        
+        // Add the factorized version
+        if (count > 1) {
+            result += std::string(" ") + std::to_string(count) + " chinese letters ";
+        } else {
+            result += pattern;
+        }
+        
+        pos = found;
+    }
+    
+    return result;
+}
+
+std::wstring utf8_to_wstring(const std::string& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.from_bytes(str);
+}
+
+std::string wstring_to_utf8(const std::wstring& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.to_bytes(str);
+}
+
+std::string toLower(const std::string& str) {
+    std::string lowerStr = str;
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+    return lowerStr;
+}
+
+void replaceEnglishSpecificAbreviations(std::string& result) {
+    std::string lowerResult = toLower(result);
+    size_t pos = 0;
+    
+    for (const auto& pair : GENERAL_WORD_REPLACEMENTS) {
+        pos = 0;
+        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
+            // Check if it's a whole word
+            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
+                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
+                // Replace with original case preserved where possible
+                result.replace(pos, pair.first.length(), pair.second);
+                lowerResult.replace(pos, pair.first.length(), pair.second);
+            }
+            pos += pair.first.length();
+        }
+    }
+}
+
+void replaceArabicSpecificAbreviations(std::string& result) {
+    std::string lowerResult = toLower(result);
+    size_t pos = 0;
+    
+    for (const auto& pair : ARABIC_WORD_REPLACEMENTS) {
+        pos = 0;
+        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
+            // Check if it's a whole word
+            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
+                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
+                // Replace with original case preserved where possible
+                result.replace(pos, pair.first.length(), pair.second);
+                lowerResult.replace(pos, pair.first.length(), pair.second);
+            }
+            pos += pair.first.length();
+        }
+    }
+}
+
+void replacePersianSpecificAbreviations(std::string& result) {
+    std::string lowerResult = toLower(result);
+    size_t pos = 0;
+    
+    for (const auto& pair : PERSIAN_WORD_REPLACEMENTS) {
+        pos = 0;
+        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
+            // Check if it's a whole word
+            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
+                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
+                // Replace with original case preserved where possible
+                result.replace(pos, pair.first.length(), pair.second);
+                lowerResult.replace(pos, pair.first.length(), pair.second);
+            }
+            pos += pair.first.length();
+        }
+    }
 }
