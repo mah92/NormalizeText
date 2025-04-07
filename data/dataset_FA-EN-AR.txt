@@ -33799,4 +33799,2352 @@ OK, Button, Not in list
 
 Voice Assistant off
 
-
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
+Farsi Qwerty keyboard Shown
+Edit box
+۱
+۲
+۳
+۴
+۵
+۶
+۷
+۸
+۹
+۰
+ص
+ث
+ق
+ف
+ع
+ه
+خ
+ح
+ج
+چ
+ش
+س
+ی
+ب
+ل
+ا
+ت
+ن
+م
+پ
+Shift is off
+ط
+ز
+ر
+د
+و
+ک
+گ
+Backspace
+Symbols
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Underscore
+Euro
+Pound
+﷼
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+٪
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Arabic semicolon
+Arabic comma
+Arabic question mark
+Backspace
+Letters
+Change to English (US)
+Arabic comma
+Space bar
+Period
+Next
+Symbol keyboard 2 of 2
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Symbol keyboard 1 of 2
+Change to English (US)
+English (US) Qwerty keyboard Shown
+Farsi Qwerty keyboard Shown
+Back, Button
+Edit box
+Alert Can't add recipient
+OK, Button
+Editing, ز, Edit box, Recipient
+Clear query, Button
+Editing, Recipient, Edit box
+Edit box
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+q
+w
+e
+r
+t
+y
+u
+i
+o
+p
+a
+s
+d
+f
+g
+h
+j
+k
+l
+z
+x
+c
+v
+b
+n
+m
+Backspace
+Symbols
+Change to Farsi
+Comma
+Space bar
+Period
+Enter
+Shift is off
+Capital Q
+Capital W
+Capital E
+Capital R
+Capital T
+Capital Y
+Capital U
+Capital I
+Capital O
+Capital P
+Capital A
+Capital S
+Capital D
+Capital F
+Capital G
+Capital H
+Capital J
+Capital K
+Capital L
+Capital Z
+Capital X
+Capital C
+Capital V
+Capital B
+Capital N
+Capital M
+Backspace
+Symbols
++
+Times
+Divided by
+Equals sign
+Slash
+Euro
+Pound
+Yen
+Korean currency Won sign
+Exclamation mark
+At
+Pound
+Dollar
+Percent
+Circumflex
+And
+Asterisk
+Left parenthesis
+Right parenthesis
+Symbol keyboard 2 of 2
+Dash
+Single quote
+Quotes
+Colon
+Semicolon
+Comma
+Question mark
+Backspace
+Grave accent
+Tilde
+Backslash
+Pipe
+Less than
+Greater than
+Opening brace
+Closing brace
+Opening bracket
+Closing bracket
+Degree symbol
+Bullet point
+Circle outline
+Black circle
+Square outline
+Black square
+Suit of spades outline.
+Suit of hearts outline
+Suit of diamonds outline
+Suit of clubs outline
+Symbol keyboard 1 of 2
+Star outline
+Small black square
+Generic currency sign
+Left double angle bracket
+Right double angle bracket
+Inverted exclamation mark
+Inverted question mark
+Backspace
+Letters
+Change to Farsi
+Comma
+Period
+Enter
+Space bar
+Back, Button
+Keyboard hidden.
