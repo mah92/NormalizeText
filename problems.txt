@@ -1,12 +1,6 @@
-line 32 still has pipe
 
  ص -> صباحا
  م -> 
- 
- mp3 -> m p 3
- apk -> a p k
- csv -> c s v
- 
  
  In:
  MultiTTS_1.7.5.2(76)-arm64-v8a-release.apk
@@ -22,18 +16,12 @@ line 32 still has pipe
  
  espeak-dataset.csv -> espeak-datasetcsv
   where is the trailing dot?
- 
-  
-  449 -> أربعمائة و تسعة و أربعون
-  864 -> ثمانمائة و أربعة و ستون
-  ???
-  
+   
   % -> ??
   @ -> ??
   
   ACAPELA -> a c a p e l a t t s
   LOAD MORE MESSAGES -> l o a d m o r e m e s s a g e s
 QWERTY -> q w e r t y
-
 
   Peace-TS -> peace-t s

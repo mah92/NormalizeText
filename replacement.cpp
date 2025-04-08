@@ -1,5 +1,4 @@
 #include "replacement.h"
-
 #include "language_detector/language_detector.h"
 #include "language-specific-codes/arabic/normalize_numbers_arabic.h"
 #include "language-specific-codes/english/normalize_numbers_english.h"
@@ -8,52 +7,38 @@
 #include <regex>
 #include <codecvt>
 #include <locale>
+#include <unordered_map>
+#include <vector>
 
+// UTF-8 character replacements
 static const std::unordered_map<std::string, std::string> utfMap = {
     // Arabic digits (٠-٩)
-    {"\xD9\xA0", "0"},  // ٠ (U+0660)
-    {"\xD9\xA1", "1"},  // ١ (U+0661)
-    {"\xD9\xA2", "2"},  // ٢ (U+0662)
-    {"\xD9\xA3", "3"},  // ٣ (U+0663)
-    {"\xD9\xA4", "4"},  // ٤ (U+0664)
-    {"\xD9\xA5", "5"},  // ٥ (U+0665)
-    {"\xD9\xA6", "6"},  // ٦ (U+0666)
-    {"\xD9\xA7", "7"},  // ٧ (U+0667)
-    {"\xD9\xA8", "8"},  // ٨ (U+0668)
-    {"\xD9\xA9", "9"},  // ٩ (U+0669)
+    {"\xD9\xA0", "0"}, {"\xD9\xA1", "1"}, {"\xD9\xA2", "2"}, 
+    {"\xD9\xA3", "3"}, {"\xD9\xA4", "4"}, {"\xD9\xA5", "5"},
+    {"\xD9\xA6", "6"}, {"\xD9\xA7", "7"}, {"\xD9\xA8", "8"},
+    {"\xD9\xA9", "9"},
 
     // Persian digits (۰-۹)
-    {"\xDB\xB0", "0"},  // ۰ (U+06F0)
-    {"\xDB\xB1", "1"},  // ۱ (U+06F1)
-    {"\xDB\xB2", "2"},  // ۲ (U+06F2)
-    {"\xDB\xB3", "3"},  // ۳ (U+06F3)
-    {"\xDB\xB4", "4"},  // ۴ (U+06F4)
-    {"\xDB\xB5", "5"},  // ۵ (U+06F5)
-    {"\xDB\xB6", "6"},  // ۶ (U+06F6)
-    {"\xDB\xB7", "7"},  // ۷ (U+06F7)
-    {"\xDB\xB8", "8"},  // ۸ (U+06F8)
-    {"\xDB\xB9", "9"},  // ۹ (U+06F9)
+    {"\xDB\xB0", "0"}, {"\xDB\xB1", "1"}, {"\xDB\xB2", "2"},
+    {"\xDB\xB3", "3"}, {"\xDB\xB4", "4"}, {"\xDB\xB5", "5"},
+    {"\xDB\xB6", "6"}, {"\xDB\xB7", "7"}, {"\xDB\xB8", "8"},
+    {"\xDB\xB9", "9"},
 
     // Decimal separator
-    {"\xD9\xAB", "."}   // ٫ (U+066B)
+    {"\xD9\xAB", "."}
 };
 
-// Table of UTF-8 sequences to remove (add more as needed)
+// Characters to remove
 const std::vector<std::string> UNWANTED_UNICODE_CHARS = {
-    "\xE2\x80\x8F",   // U+200F (RIGHT-TO-LEFT MARK, RLM)
-    "\xE2\x81\xA8",   // U+2068 (FIRST STRONG ISOLATE, FSI)
-    "\xE2\x81\xA9",   // U+2069 (POP DIRECTIONAL ISOLATE, PDI)
-    "\xE2\x80\xAE",   // U+202E (RIGHT-TO-LEFT OVERRIDE, RLO)
-    "\xE2\x80\xAD",   // U+202D (LEFT-TO-RIGHT OVERRIDE, LRO)
-    "\xE2\x80\xAB",   // U+202B (RIGHT-TO-LEFT EMBEDDING, RLE)
-    "\xE2\x80\xAA",   // U+202A (LEFT-TO-RIGHT EMBEDDING, LRE)
-    "\xE2\x80\xAC",   // U+202C (POP DIRECTIONAL FORMATTING, PDF)
-    "\xEF\xBB\xBF",   // U+FEFF (ZERO WIDTH NO-BREAK SPACE, BOM)
-    "\xE2\x80\x8E",   // U+200E (LEFT-TO-RIGHT MARK, LRM)
-    // Add more here...
+    "\xE2\x80\x8F", "\xE2\x81\xA8", "\xE2\x81\xA9", "\xE2\x80\xAE",
+    "\xE2\x80\xAD", "\xE2\x80\xAB", "\xE2\x80\xAA", "\xE2\x80\xAC",
+    "\xEF\xBB\xBF", "\xE2\x80\x8E"
 };
 
-static const std::unordered_map<std::string, std::string> GENERAL_WORD_REPLACEMENTS = {
+// =============== REPLACEMENT TABLES ===============
+
+// Whole word replacements for all languages
+static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_ALL = {
     {"mrs", "misess"},
     {"mr", "mister"},
     {"dr", "doctor"},
@@ -72,181 +57,120 @@ static const std::unordered_map<std::string, std::string> GENERAL_WORD_REPLACEME
     {"ltd", "limited"},
     {"col", "colonel"},
     {"ft", "fort"},
-
     {"bit/s", "bits per second"},
     {"kbit/s", "kilo bits per second"},
     {"mbit/s", "mega bits per second"},
     {"gbit/s", "giga bits per second"},
+    
+    //{"am", "A M"},
+    {"pm", "p m"},
+    {"c++", "c plus plus"},
 
-    {"mp3", " m p 3"},
-    {"csv", " c s v"},
-    {"apk", " a p k"},
-
+    // File Extensions
+    {"txt", "t x t"},
+    {"doc", "duck"},
+    {"docx", "duck x"},
+    {"pdf", "p d f"},
+    {"rtf", "r t f"},
+    {"odt", "o d t"},
+    {"ppt", "p p t"},
+    {"pptx", "p p t x"},
+    {"xls", "x l s"},
+    {"xlsx", "x l s x"},
+    {"csv", "c s v"},
+    {"jpg", "j p g"},
+    {"jpeg", "j peg"},
+    {"png", "p n g"},
+    {"bmp", "b m p"},
+    {"svg", "s v g"},
+    {"webp", "web p"},
+    {"aac", "a a c"},
+    {"ogg", "o g g"},
+    {"m4a", "m 4 a"},
+    {"mp3", "m p 3"},
+    {"mp4", "m p 4"},
+    {"avi", "a v i"},
+    {"mkv", "m k v"},
+    {"wmv", "w m v"},
+    {"flv", "f l v"},
+    {"webm", "web m"},
+    {"7z", "seven zip"},
+    {"gz", "g z"},
+    {"msi", "m s i"},
+    {"dll", "d l l"},
+    {"sh", "s h"},
+    {"apk", "a p k"},
+    {"html", "h t m l"},
+    {"htm", "h t m"},
+    {"css", "c s s"},
+    {"js", "j s"},
+    {"cpp", "c p p"},
+    {"php", "p h p"},
+    {"json", "j son"},
+    {"xml", "x m l"},
+    {"sql", "s q l"},
+    {"db", "d b"},
+    {"sqlite", "s q lite"},
+    {"mdb", "m d b"},
+    {"accdb", "a c c d b"},
+    {"http", "h t t p"},
+    {"https", "h t t p s"},
+    {"www", "w w w"},
 };
 
-static const std::unordered_map<std::string, std::string> ARABIC_WORD_REPLACEMENTS = {
-    {" ص ", " صباحاً "},
-    {" م ", " مساءً "},
+// Whole word replacements for Arabic
+static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_ARABIC = {
+    {"ص", "صباحاً"},
+    {"م", "مساءً"},
+    //{"أ", "ألف"},
+    //{"ب", "باء"},
 };
 
-static const std::unordered_map<std::string, std::string> PERSIAN_WORD_REPLACEMENTS = {
-    {"ص.", "صفحه"},
+// Whole word replacements for English
+static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_ENGLISH = {
+    {"approx", "approximately"},
+    {"etc", "et cetera"},
+    {"e.g", "for example"},
+    {"i.e", "that is"}
 };
 
-std::vector<std::string> split(const std::string& s, char delimiter);
-std::string join(const std::vector<std::string>& vec, char delimiter);
-std::string factorizeChineseLetters(const std::string& input);
-std::wstring utf8_to_wstring(const std::string& str);
-std::string wstring_to_utf8(const std::wstring& str);
-std::string toLower(const std::string& str);
-void replaceEnglishSpecificAbreviations(std::string& result);
-void replaceArabicSpecificAbreviations(std::string& result);
-void replacePersianSpecificAbreviations(std::string& result);
+// Whole word replacements for Persian
+static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_PERSIAN = {
+    {"ص", "صفحه"},
+    {"ش", "شماره"},
+    {"ج", "جلد"},
+    {"ک", "کوچه"},
+    {"خ", "خیابان"},
+};
 
-std::string performReplacements(const std::string& input) {
-    std::string result = input;
+// Normal replacements (anywhere in string) for all languages
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ALL = {
+    {"&", " and "},
+    {"@", " at "},
+    {"#", " number "},
+    {"%", " percent "},
+    {"+", " plus "},
+};
 
-    // Replace each character sequence in the map
-    for (const auto& pair : utfMap) {
-        size_t pos = 0;
-        while ((pos = result.find(pair.first, pos)) != std::string::npos) {
-            result.replace(pos, pair.first.length(), pair.second);
-            pos += pair.second.length();
-        }
-    }
+// Normal replacements for Arabic
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ARABIC = {
+    {"ـ", ""},
+    {"(ص)", "صلى الله عليه وسلم"},
+    {"(ع)", "علیه السلام"},
+    {"ﷻ", "جل جلاله"}
+};
 
-    // Simply remove all unwanted characters
-    for (const auto& seq : UNWANTED_UNICODE_CHARS) {
-        size_t pos = 0;
-        while ((pos = result.find(seq, pos)) != std::string::npos) {
-            result.erase(pos, seq.length());  // Just remove the characters
-            // Don't increment pos since we removed characters
-        }
-    }
+// Normal replacements for English
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ENGLISH = {
+    {"w/", "with"}, {"w/o", "without"}, {"b/c", "because"}, {"&amp;", "and"}
+};
 
-    // B replacement
-    result = std::regex_replace(result, std::regex("(^|\\s)B(\\b|\\s)"), "$1Byte$2");
-    result = std::regex_replace(result, std::regex("([۰-۹0-9])B(\\b|\\s)"), "$1 Byte$2");
-       
-    // KB replacement
-    result = std::regex_replace(result, std::regex("(^|\\s)KB(\\b|\\s)"), "$1Kilo Byte$2");
-    result = std::regex_replace(result, std::regex("([۰-۹0-9])KB(\\b|\\s)"), "$1 Kilo Byte$2");
-    
-    // MB replacement
-    result = std::regex_replace(result, std::regex("(^|\\s)MB(\\b|\\s)"), "$1Mega Byte$2");
-    result = std::regex_replace(result, std::regex("([۰-۹0-9])MB(\\b|\\s)"), "$1 Mega Byte$2");
-    
-    // GB replacement
-    result = std::regex_replace(result, std::regex("(^|\\s)GB(\\b|\\s)"), "$1Giga Byte$2");
-    result = std::regex_replace(result, std::regex("([۰-۹0-9])GB(\\b|\\s)"), "$1 Giga Byte$2");
-    
-    // TB replacement
-    result = std::regex_replace(result, std::regex("(^|\\s)TB(\\b|\\s)"), "$1Tera Byte$2");
-    result = std::regex_replace(result, std::regex("([۰-۹0-9])TB(\\b|\\s)"), "$1 Tera Byte$2");      
-    
-    // Replace capital letter sequences with spaced versions
-    // Add a space before Capital letters in the middle of a word(They are probably a separate word shown in camelCase)
-    std::regex lowercaseToCapital("([a-z])([A-Z])");
-    result = std::regex_replace(result, lowercaseToCapital, "$1 $2");
+// Normal replacements for Persian
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PERSIAN = {
+    {"ۀ", "ه ی"}, {"ة", "ت"}, {"ك", "ک"}
+};
 
-    std::regex abbrevEnd("([a-z])([A-Z]{2,})(\\b|$)");
-    result = std::regex_replace(result, abbrevEnd, "$1 $2$3");
-
-    // 2. Process all capital sequences
-    std::regex capitalLetters("([A-Z]{2,})");
-    std::string temp;
-    std::sregex_iterator it(result.begin(), result.end(), capitalLetters);
-    std::sregex_iterator end;
-
-    size_t last_pos = 0;
-    for (; it != end; ++it) {
-        temp += result.substr(last_pos, it->position() - last_pos);
-        std::string letters = (*it)[1].str();
-        
-        // Space out the abbreviation
-        for (size_t i = 0; i < letters.size(); ++i) {
-            if (i != 0) temp += " ";
-            temp += letters[i];
-        }
-        
-        last_pos = it->position() + it->length();
-    }
-    temp += result.substr(last_pos);
-    result = temp;
-
-    // Remove ALL "/" between numbers (used for date) (multiple passes if needed)
-    bool changed;
-    do {
-        changed = false;
-        std::regex slashBetweenNumbers("([٠١٢٣٤٥٦٧٨٩0-9]+)/([٠١٢٣٤٥٦٧٨٩0-9]+)");
-        std::string new_result = std::regex_replace(result, slashBetweenNumbers, "$1 $2");
-        if (new_result != result) {
-            changed = true;
-            result = new_result;
-        }
-    } while (changed);
-
-    // Remove ALL ":" between numbers (used for date) (multiple passes if needed)
-    do {
-        changed = false;
-        std::regex slashBetweenNumbers("([٠١٢٣٤٥٦٧٨٩0-9]+):([٠١٢٣٤٥٦٧٨٩0-9]+)");
-        std::string new_result = std::regex_replace(result, slashBetweenNumbers, "$1 $2");
-        if (new_result != result) {
-            changed = true;
-            result = new_result;
-        }
-    } while (changed);
-
-    // CJK character replacement
-    try {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        std::wstring wide = converter.from_bytes(result);
-        std::wregex cjkChars(L"[\\u4E00-\\u9FFF]");
-        wide = std::regex_replace(wide, cjkChars, L" chinese letter ");
-        result = converter.to_bytes(wide);
-    } catch (...) {
-        std::regex cjkChars("[\\x{4E00}-\\x{9FFF}]");
-        result = std::regex_replace(result, cjkChars, " chinese letter ");
-    }
-
-    // Factorize N " chinese letter " to "N chinese letters"
-    result = factorizeChineseLetters(result);
-
-    // Perform word replacements
-    replaceEnglishSpecificAbreviations(result);
-
-    // convert to lowercase
-    std::transform(result.begin(), result.end(), result.begin(),
-        [](unsigned char c) { return std::tolower(c); });
-    
-    //Detect language for language specific parts
-    LanguageDetector detector(Language::ARABIC);
-    std::vector<DetectedSegment> text_segments = detector.detect_segments(result);
-    for(auto& text_segment : text_segments){
-        auto &result = text_segment.text;
-        auto &language = text_segment.language;
-
-        //For test:
-        //result = result + "(" + LanguageDetector::language_to_string(language) + ")";
-
-        if(language == Language::ENGLISH) {
-            result = EnglishNumberConverter::to_english_text(result);
-        } else if(language == Language::PERSIAN) {
-            result = PersianNumberConverter::to_persian_text(result);
-            replacePersianSpecificAbreviations(result);
-
-        } else { //(language == Language::ARABIC) {
-            replaceArabicSpecificAbreviations(result);
-
-            result = ArabicNumberConverter::to_arabic_text(result);
-        }
-
-    }
-
-    result = LanguageDetector::reunite_segments(text_segments);
-
-    return result;
-}
+// =============== HELPER FUNCTIONS ===============
 
 std::vector<std::string> split(const std::string& s, char delimiter) {
     std::vector<std::string> tokens;
@@ -267,6 +191,23 @@ std::string join(const std::vector<std::string>& vec, char delimiter) {
     return result;
 }
 
+std::string toLower(const std::string& str) {
+    std::string lowerStr = str;
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+    return lowerStr;
+}
+
+std::wstring utf8_to_wstring(const std::string& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.from_bytes(str);
+}
+
+std::string wstring_to_utf8(const std::wstring& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.to_bytes(str);
+}
+
 std::string factorizeChineseLetters(const std::string& input) {
     std::string result;
     size_t pos = 0;
@@ -280,20 +221,17 @@ std::string factorizeChineseLetters(const std::string& input) {
             break;
         }
         
-        // Add the part before the match
         result += input.substr(pos, found - pos);
-        
-        // Count consecutive occurrences
         size_t count = 0;
+        
         while (found != std::string::npos && 
                input.substr(found, pattern_length) == pattern) {
             count++;
             found += pattern_length;
         }
         
-        // Add the factorized version
         if (count > 1) {
-            result += std::string(" ") + std::to_string(count) + " chinese letters ";
+            result += " " + std::to_string(count) + " chinese letters ";
         } else {
             result += pattern;
         }
@@ -304,76 +242,180 @@ std::string factorizeChineseLetters(const std::string& input) {
     return result;
 }
 
-std::wstring utf8_to_wstring(const std::string& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
+// =============== REPLACEMENT FUNCTIONS ===============
+
+void applyWholeWordReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
+    for (const auto& pair : replacements) {
+        std::regex pattern("\\b" + pair.first + "\\b");
+        result = std::regex_replace(result, pattern, pair.second);
+    }
 }
 
-std::string wstring_to_utf8(const std::wstring& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.to_bytes(str);
+void applyNormalReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
+    for (const auto& pair : replacements) {
+        size_t pos = 0;
+        while ((pos = result.find(pair.first, pos)) != std::string::npos) {
+            result.replace(pos, pair.first.length(), pair.second);
+            pos += pair.second.length();
+        }
+    }
 }
 
-std::string toLower(const std::string& str) {
-    std::string lowerStr = str;
-    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+void applyLanguageSpecificWholeWordReplacements(std::string& result, Language language) {
+    switch (language) {
+        case Language::ARABIC:
+            applyWholeWordReplacements(result, WHOLE_WORD_REPLACEMENTS_ARABIC);
+            break;
+        case Language::ENGLISH:
+            applyWholeWordReplacements(result, WHOLE_WORD_REPLACEMENTS_ENGLISH);
+            break;
+        case Language::PERSIAN:
+            applyWholeWordReplacements(result, WHOLE_WORD_REPLACEMENTS_PERSIAN);
+            break;
+        default:
+            break;
+    }
+}
+
+void applyLanguageSpecificNormalReplacements(std::string& result, Language language) {
+    switch (language) {
+        case Language::ARABIC:
+            applyNormalReplacements(result, NORMAL_REPLACEMENTS_ARABIC);
+            break;
+        case Language::ENGLISH:
+            applyNormalReplacements(result, NORMAL_REPLACEMENTS_ENGLISH);
+            break;
+        case Language::PERSIAN:
+            applyNormalReplacements(result, NORMAL_REPLACEMENTS_PERSIAN);
+            break;
+        default:
+            break;
+    }
+}
+
+// =============== MAIN REPLACEMENT FUNCTION ===============
+
+std::string performReplacements(const std::string& input) {
+    std::string result = input;
+
+    // Apply universal normal replacements first
+    applyNormalReplacements(result, NORMAL_REPLACEMENTS_ALL);
+
+    // Replace UTF-8 characters
+    for (const auto& pair : utfMap) {
+        size_t pos = 0;
+        while ((pos = result.find(pair.first, pos)) != std::string::npos) {
+            result.replace(pos, pair.first.length(), pair.second);
+            pos += pair.second.length();
+        }
+    }
+
+    // Remove unwanted characters
+    for (const auto& seq : UNWANTED_UNICODE_CHARS) {
+        size_t pos = 0;
+        while ((pos = result.find(seq, pos)) != std::string::npos) {
+            result.erase(pos, seq.length());
+        }
+    }
+
+    // Apply universal whole word replacements
+    applyWholeWordReplacements(result, WHOLE_WORD_REPLACEMENTS_ALL);
+
+    // Byte unit replacements
+    result = std::regex_replace(result, std::regex("(^|\\s)B(\\b|\\s)"), "$1Byte$2");
+    result = std::regex_replace(result, std::regex("([۰-۹0-9])B(\\b|\\s)"), "$1 Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)KB(\\b|\\s)"), "$1Kilo Byte$2");
+    result = std::regex_replace(result, std::regex("([۰-۹0-9])KB(\\b|\\s)"), "$1 Kilo Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)MB(\\b|\\s)"), "$1Mega Byte$2");
+    result = std::regex_replace(result, std::regex("([۰-۹0-9])MB(\\b|\\s)"), "$1 Mega Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)GB(\\b|\\s)"), "$1Giga Byte$2");
+    result = std::regex_replace(result, std::regex("([۰-۹0-9])GB(\\b|\\s)"), "$1 Giga Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)TB(\\b|\\s)"), "$1Tera Byte$2");
+    result = std::regex_replace(result, std::regex("([۰-۹0-9])TB(\\b|\\s)"), "$1 Tera Byte$2");
+
+    // Handle camelCase and abbreviations
+    result = std::regex_replace(result, std::regex("([a-z])([A-Z])"), "$1 $2");
+    result = std::regex_replace(result, std::regex("([a-z])([A-Z]{2,})(\\b|$)"), "$1 $2$3");
+
+    // Process capital sequences
+    std::regex capitalLetters("([A-Z]{2,})");
+    std::string temp;
+    std::sregex_iterator it(result.begin(), result.end(), capitalLetters);
+    std::sregex_iterator end;
+    size_t last_pos = 0;
+
+    for (; it != end; ++it) {
+        temp += result.substr(last_pos, it->position() - last_pos);
+        std::string letters = (*it)[1].str();
+        for (size_t i = 0; i < letters.size(); ++i) {
+            if (i != 0) temp += " ";
+            temp += letters[i];
+        }
+        last_pos = it->position() + it->length();
+    }
+    temp += result.substr(last_pos);
+    result = temp;
+
+    // Remove number separators
+    bool changed;
+    do {
+        changed = false;
+        std::regex slashBetweenNumbers("([٠١٢٣٤٥٦٧٨٩0-9]+)/([٠١٢٣٤٥٦٧٨٩0-9]+)");
+        std::string new_result = std::regex_replace(result, slashBetweenNumbers, "$1 $2");
+        if (new_result != result) {
+            changed = true;
+            result = new_result;
+        }
+    } while (changed);
+
+    do {
+        changed = false;
+        std::regex colonBetweenNumbers("([٠١٢٣٤٥٦٧٨٩0-9]+):([٠١٢٣٤٥٦٧٨٩0-9]+)");
+        std::string new_result = std::regex_replace(result, colonBetweenNumbers, "$1 $2");
+        if (new_result != result) {
+            changed = true;
+            result = new_result;
+        }
+    } while (changed);
+
+    // CJK character replacement
+    try {
+        std::wstring wide = utf8_to_wstring(result);
+        std::wregex cjkChars(L"[\\u4E00-\\u9FFF]");
+        wide = std::regex_replace(wide, cjkChars, L" chinese letter ");
+        result = wstring_to_utf8(wide);
+    } catch (...) {
+        std::regex cjkChars("[\\x{4E00}-\\x{9FFF}]");
+        result = std::regex_replace(result, cjkChars, " chinese letter ");
+    }
+
+    // Factorize Chinese letters
+    result = factorizeChineseLetters(result);
+
+    // Convert to lowercase
+    std::transform(result.begin(), result.end(), result.begin(),
         [](unsigned char c) { return std::tolower(c); });
-    return lowerStr;
-}
-
-void replaceEnglishSpecificAbreviations(std::string& result) {
-    std::string lowerResult = toLower(result);
-    size_t pos = 0;
     
-    for (const auto& pair : GENERAL_WORD_REPLACEMENTS) {
-        pos = 0;
-        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
-            // Check if it's a whole word
-            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
-                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
-                // Replace with original case preserved where possible
-                result.replace(pos, pair.first.length(), pair.second);
-                lowerResult.replace(pos, pair.first.length(), pair.second);
-            }
-            pos += pair.first.length();
+    // Language-specific processing
+    LanguageDetector detector(Language::ARABIC);
+    std::vector<DetectedSegment> text_segments = detector.detect_segments(result);
+    
+    for(auto& text_segment : text_segments) {
+        auto &segment_text = text_segment.text;
+        auto &language = text_segment.language;
+
+        applyLanguageSpecificNormalReplacements(segment_text, language);
+        applyLanguageSpecificWholeWordReplacements(segment_text, language);
+
+        if(language == Language::ENGLISH) {
+            segment_text = EnglishNumberConverter::to_english_text(segment_text);
+        } else if(language == Language::PERSIAN) {
+            segment_text = PersianNumberConverter::to_persian_text(segment_text);
+        } else {
+            segment_text = ArabicNumberConverter::to_arabic_text(segment_text);
         }
     }
-}
 
-void replaceArabicSpecificAbreviations(std::string& result) {
-    std::string lowerResult = toLower(result);
-    size_t pos = 0;
-    
-    for (const auto& pair : ARABIC_WORD_REPLACEMENTS) {
-        pos = 0;
-        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
-            // Check if it's a whole word
-            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
-                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
-                // Replace with original case preserved where possible
-                result.replace(pos, pair.first.length(), pair.second);
-                lowerResult.replace(pos, pair.first.length(), pair.second);
-            }
-            pos += pair.first.length();
-        }
-    }
-}
-
-void replacePersianSpecificAbreviations(std::string& result) {
-    std::string lowerResult = toLower(result);
-    size_t pos = 0;
-    
-    for (const auto& pair : PERSIAN_WORD_REPLACEMENTS) {
-        pos = 0;
-        while ((pos = lowerResult.find(pair.first, pos)) != std::string::npos) {
-            // Check if it's a whole word
-            if ((pos == 0 || !isalpha(lowerResult[pos-1])) &&
-                (pos + pair.first.length() == lowerResult.length() || !isalpha(lowerResult[pos + pair.first.length()]))) {
-                // Replace with original case preserved where possible
-                result.replace(pos, pair.first.length(), pair.second);
-                lowerResult.replace(pos, pair.first.length(), pair.second);
-            }
-            pos += pair.first.length();
-        }
-    }
+    result = LanguageDetector::reunite_segments(text_segments);
+    return result;
 }
