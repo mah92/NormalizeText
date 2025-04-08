@@ -271,8 +271,11 @@ inline void run_tests() {
         // Edge cases
         {"", "", false}, // Empty input
         {"abc", "abc", false}, // No numbers
+        {"ab.c", "ab.c", false}, // No numbers
+        {"v8a", "v eight a", false}, // Glued
         {"123..45", "123..45", false}, // Invalid number
         {"123,456,789", "one hundred twenty-three million four hundred fifty-six thousand seven hundred eighty-nine", false} // With separators
+
     };
 
     int passed = 0;

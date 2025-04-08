@@ -1,5 +1,6 @@
 #include "language_detector.h"
 #include <algorithm>
+#include <iostream>
 
 // Initialize static character sets with proper Unicode code points
 const std::unordered_set<uint32_t> LanguageDetector::separators = {
@@ -376,5 +377,6 @@ std::string LanguageDetector::reunite_segments(const std::vector<DetectedSegment
     for (const auto& segment : segments) {
         result += segment.text;
     }
+
     return result;
 }

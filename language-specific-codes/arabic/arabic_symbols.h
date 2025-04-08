@@ -2,6 +2,7 @@
 #define ARABIC_SYMBOLS_H
 
 #include <unordered_map> 
+#include <string> 
 
 static const std::unordered_map<std::string, std::string> ARABIC_SYMBOL_REPLACEMENTS = {
   {"$", "دولار"},
@@ -4056,6 +4057,6 @@ static const std::unordered_map<std::string, std::string> ARABIC_SYMBOL_REPLACEM
   {"🫸🏼", "يد تدفع يمينًا: بشرة بلون فاتح ومعتدل"},
   {"🫸🏽", "يد تدفع يمينًا: بشرة بلون معتدل"},
   {"🫸🏾", "يد تدفع يمينًا: بشرة بلون معتدل مائل للغامق"},
-  {"🫸🏿", "يد تدفع يمينًا: بشرة بلون غامق"}
+  {"🫸🏿", "يد تدفع يمينًا: بشرة بلون غامق"},
 };
 #endif

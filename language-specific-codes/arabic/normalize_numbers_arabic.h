@@ -312,6 +312,8 @@ inline void run_tests() {
         // Edge cases
         {"", "", false}, // Empty input
         {"abc", "abc", false}, // No numbers
+        {"ab.c", "ab.c", false}, // No numbers
+        {"ا۸ب", "ا ثمانیه ب", false}, // Glued
         {"123..45", "123..45", false}, // Invalid number
         {"123,456,789", "مائة و ثلاثة و عشرون مليون و أربعمائة و ستة و خمسون ألف و سبعمائة و تسعة و ثمانون", false} // With separators
     };
