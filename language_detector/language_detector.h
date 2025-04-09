@@ -33,7 +33,7 @@ public:
     std::vector<DetectedSegment> detect_segments(const std::string &utf8_input) const;
     static std::string reunite_segments(const std::vector<DetectedSegment>& segments);
     
-    static std::string language_to_string(Language lang) {
+    static std::string language_to_string(const Language lang) {
         switch(lang) {
             case Language::SEPARATOR: return "SEP";
             case Language::ENGLISH: return "EN";
@@ -41,6 +41,16 @@ public:
             case Language::ARABIC: return "AR";
             default: return "UN";
         }
+    }
+
+    static Language string_to_language(const std::string language) {
+        if(language == "AR")
+            return Language::ARABIC;
+        if(language == "EN")
+            return Language::ENGLISH;
+        if(language == "FA")
+            return Language::PERSIAN;
+        return Language::ENGLISH;
     }
 
 private:

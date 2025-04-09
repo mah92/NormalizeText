@@ -76,15 +76,15 @@ inline NormalizedNumber normalize(const std::string& input) {
         result.integer_part = "0";
     }
 
-    // Remove leading zeros
-    if(!result.integer_part.empty()) {
-        size_t first_non_zero = result.integer_part.find_first_not_of('0');
-        if(first_non_zero != std::string::npos) {
-            result.integer_part = result.integer_part.substr(first_non_zero);
-        } else {
-            result.integer_part = "0";
-        }
-    }
+    // Don't remove leading zeros - we need them for special numbers like phone numbers
+    // if(!result.integer_part.empty()) {
+    //     size_t first_non_zero = result.integer_part.find_first_not_of('0');
+    //     if(first_non_zero != std::string::npos) {
+    //         result.integer_part = result.integer_part.substr(first_non_zero);
+    //     } else {
+    //         result.integer_part = "0";
+    //     }
+    // }
 
     return result;
 }
@@ -137,13 +137,19 @@ inline std::string group_to_words(int num) {
 }
 
 inline std::string digit_to_word(char c) {
-    static const std::vector<std::string> digits = {
-        "صفر", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"
-    };
-    if (c >= '0' && c <= '9') {
-        return digits[c - '0'];
+    switch(c) {
+        case '0': return "صفر";
+        case '1': return "یک";
+        case '2': return "دو";
+        case '3': return "سه";
+        case '4': return "چهار";
+        case '5': return "پنج";
+        case '6': return "شش";
+        case '7': return "هفت";
+        case '8': return "هشت";
+        case '9': return "نه";
+        default: return "";
     }
-    return "";
 }
 
 inline SpecialNumberInfo detect_special_type(const std::string& normalized) {
@@ -227,29 +233,6 @@ inline std::string number_to_words(const std::string& normalized) {
 }
 
 inline std::string process_token(const std::string& token) {
-    // First check if this is a phone number pattern (11 digits starting with 0)
-    if (token.length() >= 11 && token[0] == '0') {
-        bool all_digits = true;
-        for (char c : token) {
-            if (!isdigit(c)) {
-                all_digits = false;
-                break;
-            }
-        }
-        if (all_digits) {
-            std::vector<std::string> parts;
-            for (char c : token) {
-                parts.push_back(digit_to_word(c));
-            }
-            std::string result;
-            for (size_t i = 0; i < parts.size(); ++i) {
-                if (i > 0) result += "، ";
-                result += parts[i];
-            }
-            return result;
-        }
-    }
-
     NormalizedNumber normalized = normalize(token);
     if (!normalized.is_valid) {
         return token;
@@ -293,17 +276,57 @@ inline std::string process_token(const std::string& token) {
     return number_to_words(normalized.integer_part);
 }
 
-inline std::string to_persian_text(const std::string& input) {
+
+inline std::string normalize_text(const std::string& input) {
     std::string result;
     std::string current_token;
     
-    for(char c : input) {
-        if(isdigit(c) || c == '.' || c == ',') {
+    for(size_t i = 0; i < input.size(); ++i) {
+        char c = input[i];
+        
+        if(isdigit(c)) {
+            // Add space before number if previous character isn't already a space or at start
+            if(current_token.empty() && !result.empty() && !isspace(result.back())) {
+                result += ' ';
+            }
             current_token += c;
-        } else {
+        } 
+        else if(c == '.' || c == ',') {
+            // Check if the previous or next character is a digit
+            bool valid_decimal = false;
+            
+            // Check previous character
+            if(i > 0 && isdigit(input[i-1])) {
+                valid_decimal = true;
+            }
+            // Check next character
+            else if(i < input.size()-1 && isdigit(input[i+1])) {
+                valid_decimal = true;
+            }
+            
+            if(valid_decimal) {
+                current_token += c;
+            } else {
+                // Not a valid decimal point or separator
+                if(!current_token.empty()) {
+                    result += process_token(current_token);
+                    current_token.clear();
+                    // Add space after number
+                    if(!isspace(c)) {
+                        result += ' ';
+                    }
+                }
+                result += c;
+            }
+        }
+        else {
             if(!current_token.empty()) {
                 result += process_token(current_token);
                 current_token.clear();
+                // Add space after number
+                if(!isspace(c)) {
+                    result += ' ';
+                }
             }
             result += c;
         }
@@ -348,15 +371,15 @@ inline void run_tests() {
         {"متن", "متن", false}, // No numbers
         {"abc", "abc", false}, // No numbers
         {"ab.c", "ab.c", false}, // No numbers
-        {"ا۸ب", "ا هشت ب", false}, // Glued
-        {"123..45", "123..45", false}, // Invalid number
+        {"ا8ب", "ا هشت ب", false}, // Glued
+        {"123..45", "صد و بیست و سه .. چهل و پنج", false}, // Invalid number
         {"123,456,789", "صد و بیست و سه میلیون و چهارصد و پنجاه و شش هزار و هفتصد و هشتاد و نه", false} // With separators
     };
 
     int passed = 0;
     for (const auto& test : tests) {
         try {
-            std::string result = to_persian_text(test.input);
+            std::string result = normalize_text(test.input);
             if (test.should_throw) {
                 std::cout << "FAIL: '" << test.input << "' should throw but returned '" 
                           << result << "'\n";

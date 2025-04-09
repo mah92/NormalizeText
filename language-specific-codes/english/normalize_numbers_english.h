@@ -67,15 +67,15 @@ inline NormalizedNumber normalize(const std::string& input) {
         result.integer_part = "0";
     }
 
-    // Remove leading zeros
-    if(!result.integer_part.empty()) {
-        size_t first_non_zero = result.integer_part.find_first_not_of('0');
-        if(first_non_zero != std::string::npos) {
-            result.integer_part = result.integer_part.substr(first_non_zero);
-        } else {
-            result.integer_part = "0";
-        }
-    }
+    // Don't remove leading zeros - we need them for special numbers like phone numbers
+    // if(!result.integer_part.empty()) {
+    //     size_t first_non_zero = result.integer_part.find_first_not_of('0');
+    //     if(first_non_zero != std::string::npos) {
+    //         result.integer_part = result.integer_part.substr(first_non_zero);
+    //     } else {
+    //         result.integer_part = "0";
+    //     }
+    // }
 
     return result;
 }
@@ -178,11 +178,13 @@ inline std::string number_to_words(const std::string& normalized) {
 }
 
 inline std::string process_token(const std::string& token) {
+
     NormalizedNumber normalized = normalize(token);
     if(!normalized.is_valid) {
         return token;
     }
 
+    // Handle special numbers (phone numbers, IDs, etc.)
     SpecialNumberInfo special_info = detect_special_type(normalized.integer_part);
     if(!special_info.groups.empty() || normalized.integer_part.length() > 9) {
         std::vector<std::string> parts;
@@ -205,6 +207,7 @@ inline std::string process_token(const std::string& token) {
         return result;
     }
 
+    // Handle regular numbers with fractions
     if(!normalized.fractional_part.empty()) {
         std::string int_part = number_to_words(normalized.integer_part);
         std::string frac_part;
@@ -218,17 +221,56 @@ inline std::string process_token(const std::string& token) {
     return number_to_words(normalized.integer_part);
 }
 
-inline std::string to_english_text(const std::string& input) {
+inline std::string normalize_text(const std::string& input) {
     std::string result;
     std::string current_token;
     
-    for(char c : input) {
-        if(isdigit(c) || c == '.' || c == ',') {
+    for(size_t i = 0; i < input.size(); ++i) {
+        char c = input[i];
+        
+        if(isdigit(c)) {
+            // Add space before number if previous character isn't already a space or at start
+            if(current_token.empty() && !result.empty() && !isspace(result.back())) {
+                result += ' ';
+            }
             current_token += c;
-        } else {
+        } 
+        else if(c == '.' || c == ',') {
+            // Check if the previous or next character is a digit
+            bool valid_decimal = false;
+            
+            // Check previous character
+            if(i > 0 && isdigit(input[i-1])) {
+                valid_decimal = true;
+            }
+            // Check next character
+            else if(i < input.size()-1 && isdigit(input[i+1])) {
+                valid_decimal = true;
+            }
+            
+            if(valid_decimal) {
+                current_token += c;
+            } else {
+                // Not a valid decimal point or separator
+                if(!current_token.empty()) {
+                    result += process_token(current_token);
+                    current_token.clear();
+                    // Add space after number
+                    if(!isspace(c)) {
+                        result += ' ';
+                    }
+                }
+                result += c;
+            }
+        }
+        else {
             if(!current_token.empty()) {
                 result += process_token(current_token);
                 current_token.clear();
+                // Add space after number
+                if(!isspace(c)) {
+                    result += ' ';
+                }
             }
             result += c;
         }
@@ -266,14 +308,15 @@ inline void run_tests() {
         
         // Mixed text and numbers
         {"The code is 1234", "The code is one thousand two hundred thirty-four", false},
-        {"Call 555-1234", "Call five hundred fifty-five-one thousand two hundred thirty-four", false},
-        
+        {"Call 555-1234", "Call five hundred fifty-five - one thousand two hundred thirty-four", false},
+        {"number 09123456789", "number zero, nine, one, two, three, four, five, six, seven, eight, nine", false},
+
         // Edge cases
         {"", "", false}, // Empty input
         {"abc", "abc", false}, // No numbers
         {"ab.c", "ab.c", false}, // No numbers
         {"v8a", "v eight a", false}, // Glued
-        {"123..45", "123..45", false}, // Invalid number
+        {"123..45", "one hundred twenty-three .. forty-five", false}, // Invalid number
         {"123,456,789", "one hundred twenty-three million four hundred fifty-six thousand seven hundred eighty-nine", false} // With separators
 
     };
@@ -281,7 +324,7 @@ inline void run_tests() {
     int passed = 0;
     for (const auto& test : tests) {
         try {
-            std::string result = to_english_text(test.input);
+            std::string result = normalize_text(test.input);
             if (test.should_throw) {
                 std::cout << "FAIL: '" << test.input << "' should throw but returned '" 
                           << result << "'\n";

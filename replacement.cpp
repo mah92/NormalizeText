@@ -181,15 +181,16 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_AR
     {"(ع)", "علیه السلام"},
     {"ﷻ", "جل جلاله"},
 
-    {"@", " في "},
-    {"#", " شباك "},
-    {"%", " بالمئة"},
-    {"^", " مرفوع للقوة "},
-    {"&", " و "},
-    {"*", " مضروب في "},
-    {"+", " زائد "},
-    {"/", " مقسوم على "},
-    {"=", " يساوي "},
+    {"@", "في"},
+    {"#", "شباك"},
+    {"%", "بالمئة"},
+    {"^", "مرفوع للقوة"},
+    {"&", "و"},
+    {"*", "مضروب في"},
+    {"+", "زائد"},
+    {"/", "مقسوم على"},
+    {"\\", "بَک اِسلَش"},
+    {"=", "يساوي"},
 };
 
 // Normal replacements for English
@@ -198,15 +199,16 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_EN
     {"w/o", "without"},
     {"b/c", "because"},
 
-    {"@", " at sign "},
-    {"#", " hash "},
-    {"%", " percent "},
-    {"^", " power "},
-    {"&", " and "},
-    {"*", " multiply "},
-    {"+", " plus "},
-    {"/", " slash "},
-    {"=", " equals "},
+    {"@", "at sign"},
+    {"#", "hash"},
+    {"%", "percent"},
+    {"^", "power"},
+    {"&", "and"},
+    {"*", "multiply"},
+    {"+", "plus"},
+    {"/", "slash"},
+    {"\\", "backslash"},
+    {"=", "equals"},
 };
 
 // Normal replacements for Persian
@@ -215,15 +217,16 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PE
     {"ة", "ت"},
     {"ك", "ک"},
 
-    {"@", " اَت ساین "},
-    {"#", " هَش تگ "},
-    {"%", " درصد "},
-    {"^", " به توان "},
-    {"&", " and "},
-    {"*", " ضرب در "},
-    {"+", " به علاوه ی "},
-    {"/", " تقسیم بر "},
-    {"=", " مساوی "},  
+    {"@", "اَت ساین"},
+    {"#", "هَش تگ"},
+    {"%", "درصد"},
+    {"^", "به توان"},
+    {"&", "اَند"},
+    {"*", "ضرب در"},
+    {"+", "به علاوه ی"},
+    {"/", "تقسیم بر"},
+    {"\\", "بَک اِسلَش"},
+    {"=", "مساوی"},  
 };
 
 void doArabicSpecificReplacements(std::string &segment_text)
@@ -246,10 +249,11 @@ std::string wstring_to_utf8(const std::wstring& str);
 std::string factorizeChineseLetters(const std::string& input);
 void applyWholeWordReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
+void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 
 // =============== MAIN REPLACEMENT FUNCTION ===============
 
-std::string performReplacements(const std::string& input) {
+std::string performReplacements(Language mainlang, const std::string& input) {
     std::string result = input;
 
     // Remove unwanted characters
@@ -261,7 +265,7 @@ std::string performReplacements(const std::string& input) {
     }
 
     // Apply universal normal replacements
-    applyNormalReplacements(result, NORMAL_REPLACEMENTS_ALL);
+    applyNormalReplacementsWithSpace(result, NORMAL_REPLACEMENTS_ALL);
 
     // Replace Arabic numbers
     applyNormalReplacements(result, ARABIC_NUMBER_REPLACEMENTS);
@@ -364,7 +368,6 @@ std::string performReplacements(const std::string& input) {
         [](unsigned char c) { return std::tolower(c); });
 
     // Language-specific processing
-    Language mainlang = Language::ARABIC; //Main language
     LanguageDetector detector(mainlang);
 
     std::vector<DetectedSegment> text_segments = detector.detect_segments(result);
@@ -375,27 +378,27 @@ std::string performReplacements(const std::string& input) {
 
         switch (language) {
             case Language::ARABIC:
-            applyNormalReplacements(segment_text, NORMAL_REPLACEMENTS_ARABIC);
-            applyNormalReplacements(segment_text, ARABIC_SYMBOL_REPLACEMENTS);
+            applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ARABIC);
+            applyNormalReplacementsWithSpace(segment_text, ARABIC_SYMBOL_REPLACEMENTS);
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_ARABIC);
-            segment_text = ArabicNumberConverter::to_arabic_text(segment_text);
+            segment_text = ArabicNumberConverter::normalize_text(segment_text);
 
             doArabicSpecificReplacements(segment_text);
             break;
 
             case Language::PERSIAN:
-            applyNormalReplacements(segment_text, NORMAL_REPLACEMENTS_PERSIAN);
-            applyNormalReplacements(segment_text, PERSIAN_SYMBOL_REPLACEMENTS);
+            applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_PERSIAN);
+            applyNormalReplacementsWithSpace(segment_text, PERSIAN_SYMBOL_REPLACEMENTS);
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_PERSIAN);
-            segment_text = PersianNumberConverter::to_persian_text(segment_text);
+            segment_text = PersianNumberConverter::normalize_text(segment_text);
             break;
 
             default:
             case Language::ENGLISH:
-            //applyNormalReplacements(segment_text, );
-            applyNormalReplacements(segment_text, NORMAL_REPLACEMENTS_ENGLISH);
+            //applyNormalReplacementsWithSpace(segment_text, );
+            applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ENGLISH);
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_ENGLISH);
-            segment_text = EnglishNumberConverter::to_english_text(segment_text);
+            segment_text = EnglishNumberConverter::normalize_text(segment_text);
             break;
         }
     }
@@ -491,6 +494,22 @@ void applyNormalReplacements(std::string& result, const std::unordered_map<std::
         while ((pos = result.find(pair.first, pos)) != std::string::npos) {
             result.replace(pos, pair.first.length(), pair.second);
             pos += pair.second.length();
+        }
+    }
+}
+
+void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
+    for (const auto& pair : replacements) {
+        size_t pos = 0;
+        while ((pos = result.find(pair.first, pos)) != std::string::npos) {
+            // Always add space before and after
+            std::string replacement = " " + pair.second + " ";
+            
+            // Perform the replacement
+            result.replace(pos, pair.first.length(), replacement);
+            
+            // Move position forward (skip past the replacement + spaces)
+            pos += replacement.length();
         }
     }
 }

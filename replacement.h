@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "language_detector/language_detector.h"
 
 // Helper functions
 std::vector<std::string> split(const std::string& s, char delimiter);
@@ -13,6 +14,6 @@ std::wstring utf8_to_wstring(const std::string& str);
 std::string wstring_to_utf8(const std::wstring& str);
 
 // Main replacement function
-std::string performReplacements(const std::string& input);
+std::string performReplacements(Language mainlang, const std::string& input);
 
 #endif // REPLACEMENT_H

@@ -1,4 +1,5 @@
 #include "replacement.h"
+#include "language_detector.h"
 #include <iostream>
 #include <fstream>
 #include <locale>
@@ -10,24 +11,27 @@ void removeAllPipes(std::string& str) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <input_file> <output_file>\n";
+    if (argc != 4) {
+        std::cerr << "Usage: " << argv[0] << " <main_language> <input_file> <output_file>\n";
         return 1;
     }
 
     // Set UTF-8 locale
     std::locale::global(std::locale("en_US.UTF-8"));
     
-    std::ifstream inputFile(argv[1]);
-    std::ofstream outputFile(argv[2]);
+    std::string mainLanguage(argv[1]);
+    Language mainlang = LanguageDetector::string_to_language(mainLanguage);
+
+    std::ifstream inputFile(argv[2]);
+    std::ofstream outputFile(argv[3]);
     
     if (!inputFile.is_open()) {
-        std::cerr << "Error opening input file: " << argv[1] << "\n";
+        std::cerr << "Error opening input file: " << argv[2] << "\n";
         return 1;
     }
     
     if (!outputFile.is_open()) {
-        std::cerr << "Error opening output file: " << argv[2] << "\n";
+        std::cerr << "Error opening output file: " << argv[3] << "\n";
         return 1;
     }
 
@@ -37,7 +41,7 @@ int main(int argc, char* argv[]) {
         removeAllPipes(line);
         
         // Process the line content
-        std::string processed = performReplacements(line);
+        std::string processed = performReplacements(mainlang, line);
         
         // Remove any pipes that might have been in the processed data
         removeAllPipes(processed);
@@ -54,6 +58,6 @@ int main(int argc, char* argv[]) {
     inputFile.close();
     outputFile.close();
     
-    std::cout << "Processing complete. Output written to " << argv[2] << "\n";
+    std::cout << "Processing complete. Output written to " << argv[3] << "\n";
     return 0;
 }
