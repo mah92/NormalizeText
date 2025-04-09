@@ -212,11 +212,13 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_EN
 };
 
 // Normal replacements for Persian
-static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PERSIAN = {
-    {"ۀ", "ه ی"},
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PERSIAN_NO_SPACE = {
+    {"ۀ", "ه ی"}, //
     {"ة", "ت"},
     {"ك", "ک"},
+};
 
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PERSIAN = {
     {"@", "اَت ساین"},
     {"#", "هَش تگ"},
     {"%", "درصد"},
@@ -387,6 +389,7 @@ std::string performReplacements(Language mainlang, const std::string& input) {
             break;
 
             case Language::PERSIAN:
+            applyNormalReplacements(segment_text, NORMAL_REPLACEMENTS_PERSIAN_NO_SPACE);
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_PERSIAN);
             applyNormalReplacementsWithSpace(segment_text, PERSIAN_SYMBOL_REPLACEMENTS);
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_PERSIAN);

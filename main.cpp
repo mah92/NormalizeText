@@ -11,8 +11,8 @@ void removeAllPipes(std::string& str) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        std::cerr << "Usage: " << argv[0] << " <main_language> <input_file> <output_file>\n";
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <main_language> <input_file>\n";
         return 1;
     }
 
@@ -23,15 +23,27 @@ int main(int argc, char* argv[]) {
     Language mainlang = LanguageDetector::string_to_language(mainLanguage);
 
     std::ifstream inputFile(argv[2]);
-    std::ofstream outputFile(argv[3]);
     
     if (!inputFile.is_open()) {
         std::cerr << "Error opening input file: " << argv[2] << "\n";
         return 1;
     }
     
-    if (!outputFile.is_open()) {
-        std::cerr << "Error opening output file: " << argv[3] << "\n";
+    // Create output filenames based on input filename
+    std::string inputFileName(argv[2]);
+    std::string csvOutputFile = inputFileName + "-result.csv";
+    std::string txtOutputFile = inputFileName + "-result.txt";
+    
+    std::ofstream csvOutput(csvOutputFile);
+    std::ofstream txtOutput(txtOutputFile);
+    
+    if (!csvOutput.is_open()) {
+        std::cerr << "Error opening CSV output file: " << csvOutputFile << "\n";
+        return 1;
+    }
+    
+    if (!txtOutput.is_open()) {
+        std::cerr << "Error opening TXT output file: " << txtOutputFile << "\n";
         return 1;
     }
 
@@ -51,13 +63,19 @@ int main(int argc, char* argv[]) {
         columns.push_back(line);
         columns.push_back(processed);
         
-        // Write the modified line to output using pipe as delimiter
-        outputFile << join(columns, '|') << "\n";
+        // Write to CSV file with pipe delimiter
+        csvOutput << join(columns, '|') << "\n";
+        
+        // Write just the processed content to the text file
+        txtOutput << processed << "\n";
     }
 
     inputFile.close();
-    outputFile.close();
+    csvOutput.close();
+    txtOutput.close();
     
-    std::cout << "Processing complete. Output written to " << argv[3] << "\n";
+    std::cout << "Processing complete. Output written to:\n";
+    std::cout << " - " << csvOutputFile << " (CSV with original and processed text)\n";
+    std::cout << " - " << txtOutputFile << " (processed text only)\n";
     return 0;
 }
