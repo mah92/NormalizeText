@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
     
     // Create output filenames based on input filename
     std::string inputFileName(argv[2]);
-    std::string csvOutputFile = inputFileName + "-result.csv";
-    std::string txtOutputFile = inputFileName + "-result.txt";
+    std::string csvOutputFile = inputFileName + "-normalized.csv";
+    std::string txtOutputFile = inputFileName + "-normalized.txt";
     
     std::ofstream csvOutput(csvOutputFile);
     std::ofstream txtOutput(txtOutputFile);
