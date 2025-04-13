@@ -70,9 +70,17 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_NO
     //???
     {"Ａ", "A"}, {"Ｂ", "B"}, {"Ｃ", "C"}, {"Ｄ", "D"}, {"Ｅ", "E"}, {"Ｆ", "F"}, {"Ｇ", "G"}, {"Ｈ", "H"}, {"Ｉ", "I"}, {"Ｊ", "J"}, {"Ｋ", "K"}, {"Ｌ", "L"}, {"Ｍ", "M"}, {"Ｎ", "N"}, {"Ｏ", "O"}, {"Ｐ", "P"}, {"Ｑ", "Q"}, {"Ｒ", "R"}, {"Ｓ", "S"}, {"Ｔ", "T"}, {"Ｕ", "U"}, {"Ｖ", "V"}, {"Ｗ", "W"}, {"Ｘ", "X"}, {"Ｙ", "Y"}, {"Ｚ", "Z"},
     {"ａ", "a"}, {"ｂ", "b"}, {"ｃ", "c"}, {"ｄ", "d"}, {"ｅ", "e"}, {"ｆ", "f"}, {"ｇ", "g"}, {"ｈ", "h"}, {"ｉ", "i"}, {"ｊ", "j"}, {"ｋ", "k"}, {"ｌ", "l"}, {"ｍ", "m"}, {"ｎ", "n"}, {"ｏ", "o"}, {"ｐ", "p"}, {"ｑ", "q"}, {"ｒ", "r"}, {"ｓ", "s"}, {"ｔ", "t"}, {"ｕ", "u"}, {"ｖ", "v"}, {"ｗ", "w"}, {"ｘ", "x"}, {"ｙ", "y"}, {"ｚ", "z"},
+
+    //Mathematical Bold Digits 
+    {"𝟎", "0"}, {"𝟏", "1"}, {"𝟐", "2"}, {"𝟑", "3"}, {"𝟒", "4"}, {"𝟓", "5"}, {"𝟔", "6"}, {"𝟕", "7"}, {"𝟖", "8"}, {"𝟗", "9"},
+
+    // Double-struck (ℙ𝕝𝕒𝕚𝕟)
+    {"𝟘", "0"}, {"𝟙", "1"}, {"𝟚", "2"}, {"𝟛", "3"}, {"𝟜", "4"}, {"𝟝", "5"}, {"𝟞", "6"}, {"𝟟", "7"}, {"𝟠", "8"}, {"𝟡", "9"},
+
+    // Sans-serif (𝖯𝖺𝗍𝗁)
+    {"𝟢", "0"}, {"𝟣", "1"}, {"𝟤", "2"}, {"𝟥", "3"}, {"𝟦", "4"}, {"𝟧", "5"}, {"𝟨", "6"}, {"𝟩", "7"}, {"𝟪", "8"}, {"𝟫", "9"},
 };
 
-    
 // Characters to remove
 const std::vector<std::string> UNWANTED_UNICODE_CHARS = {
     "\xE2\x80\x8F", "\xE2\x81\xA8", "\xE2\x81\xA9", "\xE2\x80\xAE",
@@ -89,8 +97,6 @@ static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENT
 
 // Whole word replacements for Arabic
 static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_ARABIC = {
-    //{" ص ", " صباحاً "},
-    //{" م ", " مساءً "},
     //{"أ", "ألف"},
     //{"ب", "باء"},
 };
@@ -279,12 +285,14 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PE
 
 void doArabicSpecificReplacements(std::string &segment_text)
 {
-    std::regex pattern1("(\\s)ص");
-    std::string replacement1 = "$1صباحاً";
+    // Matches: number → whitespace → "ص" → followed by non-Arabic OR end-of-string
+    std::regex pattern1(R"((\d+\s)ص([^\wء-ي]|$))");  // [^\wء-ي] = not a word char or Arabic letter
+    std::string replacement1 = "$1صباحاً ";
     segment_text = std::regex_replace(segment_text, pattern1, replacement1);
 
-    std::regex pattern2("(\\s)م");
-    std::string replacement2 = "$1مساءً";
+    // Matches: number → whitespace → "م" → followed by non-Arabic OR end-of-string
+    std::regex pattern2(R"((\d+\s)م([^\wء-ي]|$))");  // [^\wء-ي] = not a word char or Arabic letter
+    std::string replacement2 = "$1مساءً ";
     segment_text = std::regex_replace(segment_text, pattern2, replacement2);
 }
 
@@ -445,9 +453,11 @@ std::string performReplacements(Language mainlang, const std::string& input) {
             case Language::ARABIC:
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ARABIC);
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_ARABIC);
-            segment_text = ArabicNumberConverter::normalize_text(segment_text);
-
-            doArabicSpecificReplacements(segment_text);
+            if(mainlang == Language::ARABIC) doArabicSpecificReplacements(segment_text); // Should be before ArabicNumberConverter
+            if(mainlang != Language::PERSIAN) //Persian users don't work with arabic numbers
+                segment_text = ArabicNumberConverter::normalize_text(segment_text);
+            else
+                segment_text = PersianNumberConverter::normalize_text(segment_text);
             break;
 
             case Language::PERSIAN:

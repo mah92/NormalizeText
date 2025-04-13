@@ -4061,5 +4061,7 @@ static const std::unordered_map<std::string, std::string> PERSIAN_SYMBOL_REPLACE
   {"🫸🏽", "دست به سمت راست: پوست متوسط"},
   {"🫸🏾", "دست به سمت راست: پوست متوسط رو به تیره"},
   {"🫸🏿", "دست به سمت راست: پوست تیره"},
+
+  {"۩", "سجده"},
 };
 #endif

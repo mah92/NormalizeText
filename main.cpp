@@ -4,6 +4,7 @@
 #include <fstream>
 #include <locale>
 #include <algorithm>
+#include <chrono>  // For time measurement
 
 // Helper function to remove all pipe characters from a string
 void removeAllPipes(std::string& str) {
@@ -47,8 +48,16 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // Variables for time measurement
+    auto total_start = std::chrono::high_resolution_clock::now();
+    size_t line_count = 0;
+    long long total_processing_time_ns = 0;
+
     std::string line;
     while (std::getline(inputFile, line)) {
+        auto line_start = std::chrono::high_resolution_clock::now();
+        line_count++;
+        
         // First remove all pipes from the entire line
         removeAllPipes(line);
         
@@ -68,14 +77,29 @@ int main(int argc, char* argv[]) {
         
         // Write just the processed content to the text file
         txtOutput << processed << "\n";
+
+        auto line_end = std::chrono::high_resolution_clock::now();
+        total_processing_time_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(line_end - line_start).count();
     }
+
+    auto total_end = std::chrono::high_resolution_clock::now();
+    auto total_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(total_end - total_start).count();
 
     inputFile.close();
     csvOutput.close();
     txtOutput.close();
     
+    // Calculate and output timing information
+    double avg_time_per_line_ns = static_cast<double>(total_processing_time_ns) / line_count;
+    double avg_time_per_line_ms = avg_time_per_line_ns / 1'000'000.0;
+    
     std::cout << "Processing complete. Output written to:\n";
     std::cout << " - " << csvOutputFile << " (CSV with original and processed text)\n";
     std::cout << " - " << txtOutputFile << " (processed text only)\n";
+    std::cout << "\nPerformance metrics:\n";
+    std::cout << " - Total lines processed: " << line_count << "\n";
+    std::cout << " - Total processing time: " << (total_time_ns / 1000000.0) << " ms\n";
+    std::cout << " - Average time per line: " << avg_time_per_line_ms << " ms\n";
+    
     return 0;
 }
