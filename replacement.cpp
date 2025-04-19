@@ -331,9 +331,9 @@ void doArabicSpecificReplacements(std::string &segment_text)
 std::vector<std::string> split(const std::string& s, char delimiter);
 std::string join(const std::vector<std::string>& vec, char delimiter);
 std::string toLower(const std::string& str);
-std::wstring utf8_to_wstring(const std::string& str);
-std::string wstring_to_utf8(const std::wstring& str);
 std::string factorizeChineseLetters(const std::string& input);
+bool is_cjk(uint32_t cp);
+std::string replace_cjk_with_placeholder(const std::string& input);
 void applyWholeWordReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
@@ -436,15 +436,7 @@ std::string performReplacements(Language mainlang, const std::string& input) {
 
     // CJK character replacement
     // "指事"-> "chinese letter  chinese letter"
-    try {
-        std::wstring wide = utf8_to_wstring(result);
-        std::wregex cjkChars(L"[\\u4E00-\\u9FFF]");
-        wide = std::regex_replace(wide, cjkChars, L" chinese letter ");
-        result = wstring_to_utf8(wide);
-    } catch (...) {
-        std::regex cjkChars("[\\x{4E00}-\\x{9FFF}]");
-        result = std::regex_replace(result, cjkChars, " chinese letter ");
-    }
+    result = replace_cjk_with_placeholder(result);
 
     // Factorize Chinese letters
     // " chinese letter  chinese letter " -> "2 chinese letters"
@@ -487,7 +479,7 @@ std::string performReplacements(Language mainlang, const std::string& input) {
             case Language::ARABIC:
             // 8:54 م ->
             //   8:54 مساءً
-            if(mainlang == Language::ARABIC) doArabicSpecificReplacements(segment_text); // Should be before ArabicNumberConverter and applyWholeWordReplacements
+            if(mainlang == Language::ARABIC) doArabicSpecificReplacements(segment_text); // Should be before ArabicNumberConverter and applyWholeWordReplacements, Causes Artifacts if called on english(?)
             // @ -> فی
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ARABIC);
             // ا -> الف
@@ -553,16 +545,6 @@ std::string toLower(const std::string& str) {
     std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
         [](unsigned char c) { return std::tolower(c); });
     return lowerStr;
-}
-
-std::wstring utf8_to_wstring(const std::string& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
-}
-
-std::string wstring_to_utf8(const std::wstring& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.to_bytes(str);
 }
 
 std::string factorizeChineseLetters(const std::string& input) {
@@ -637,4 +619,48 @@ void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_
             pos += replacement.length();
         }
     }
+}
+
+bool is_cjk(uint32_t cp) {
+    return (cp >= 0x4E00 && cp <= 0x9FFF);
+}
+
+std::string replace_cjk_with_placeholder(const std::string& input) {
+    std::string output;
+    size_t i = 0;
+    while (i < input.size()) {
+        unsigned char c = input[i];
+        uint32_t codepoint = 0;
+        int bytes = 0;
+
+        // Decode UTF-8 to codepoint
+        if (c < 0x80) {
+            codepoint = c;
+            bytes = 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            codepoint = ((c & 0x1F) << 6) | (input[i + 1] & 0x3F);
+            bytes = 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            codepoint = ((c & 0x0F) << 12) |
+                        ((input[i + 1] & 0x3F) << 6) |
+                        (input[i + 2] & 0x3F);
+            bytes = 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            codepoint = ((c & 0x07) << 18) |
+                        ((input[i + 1] & 0x3F) << 12) |
+                        ((input[i + 2] & 0x3F) << 6) |
+                        (input[i + 3] & 0x3F);
+            bytes = 4;
+        }
+
+        if (is_cjk(codepoint)) {
+            output += " chinese letter ";
+        } else {
+            output += input.substr(i, bytes);
+        }
+
+        i += bytes;
+    }
+
+    return output;
 }
