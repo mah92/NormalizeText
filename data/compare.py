@@ -9,5 +9,5 @@ for i in range(max_lines):
     line2 = lines2[i].strip() if i < len(lines2) else None
     if line1 != line2:
         #print(f"Line {i+1}: File1='{line1}', File2='{line2}'")
-        print(f"{i+1}")
-        #print(f"{line2}")
+        #print(f"{i+1}")
+        print(f"{line2}")

@@ -97,8 +97,39 @@ static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENT
 
 // Whole word replacements for Arabic
 static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_ARABIC = {
-    //{"أ", "ألف"},
-    //{"ب", "باء"},
+    {"أ", "ألف"},
+    {"ا", "ألف"},
+    {"ب", "باء"},
+    {"ت", "تاء"},
+    {"ث", "ثاء"},
+    {"ج", "جيم"},
+    {"ح", "حاء"},
+    {"خ", "خاء"},
+    {"د", "دال"},
+    {"ذ", "ذال"},
+    {"ر", "راء"},
+    {"ز", "زاي"},
+    {"س", "سين"},
+    {"ش", "شين"},
+    {"ص", "صاد"},
+    {"ض", "ضاد"},
+    {"ط", "طاء"},
+    {"ظ", "ظاء"},
+    {"ع", "عين"},
+    {"غ", "غين"},
+    {"ف", "فاء"},
+    {"ق", "قاف"},
+    {"ک", "كاف"},
+    {"ك", "كاف"},
+    {"ک", "گاف"},
+    {"ل", "لام"},
+    {"م", "ميم"},
+    {"ن", "نون"},
+    {"و", "واو"},
+    {"ه", "هاء"},
+    {"ة", "تاء مربوطة"},
+    {"ی", "ياء"},
+    {"ي", "ياء"},
 };
 
 // Whole word replacements for English
@@ -220,6 +251,10 @@ static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENT
 
 // Normal replacements (anywhere in string) for all languages
 static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ALL = {
+    {"ﷻ", "جل جلاله"},
+    {"(ص)", "صلى الله عليه و آله"},
+    {"(ع)", "علیه السلام"},
+
     // Lowercase Greek
     {"α", "alpha"}, {"ά", "alpha"}, {"β", "beta"}, {"γ", "gamma"}, {"δ", "delta"}, {"ε", "epsilon"}, {"έ", "epsilon"}, {"ζ", "zeta"}, {"η", "eta"}, {"ή", "eta"}, {"θ", "theta"}, {"ι", "iota"}, {"ί", "iota"}, {"κ", "kappa"}, {"λ", "lambda"}, {"μ", "mu"}, {"ν", "nu"}, {"ξ", "xi"}, {"ο", "omicron"}, {"ό", "omicron"}, {"π", "pi"}, {"ρ", "rho"}, {"σ", "sigma"}, {"ς", "sigma"}, {"τ", "tau"}, {"υ", "upsilon"}, {"ύ", "upsilon"}, {"φ", "phi"}, {"χ", "chi"}, {"ψ", "psi"}, {"ω", "omega"}, {"ώ", "omega"},
 
@@ -229,10 +264,6 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_AL
 
 // Normal replacements for Arabic
 static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ARABIC = {
-    {"(ص)", "صلى الله عليه و آله"},
-    {"(ع)", "علیه السلام"},
-    {"ﷻ", "جل جلاله"},
-
     {"@", "في"},
     {"#", "شباك"},
     {"%", "بالمئة"},
@@ -247,10 +278,6 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_AR
 
 // Normal replacements for English
 static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ENGLISH = {
-    {"w/", "with"},
-    {"w/o", "without"},
-    {"b/c", "because"},
-
     {"@", "at sign"},
     {"#", "hash"},
     {"%", "percent"},
@@ -261,11 +288,15 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_EN
     {"/", "slash"},
     {"\\", "backslash"},
     {"=", "equals"},
+
+    {"w/", "with"},
+    {"w/o", "without"},
+    {"b/c", "because"},
 };
 
 // Normal replacements for Persian
 static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PERSIAN_NO_SPACE = {
-    {"ۀ", "ه ی"}, //
+    {"ۀ", "ه ی"},
     {"ة", "ت"},
     {"ك", "ک"},
 };
@@ -304,6 +335,7 @@ std::wstring utf8_to_wstring(const std::string& str);
 std::string wstring_to_utf8(const std::wstring& str);
 std::string factorizeChineseLetters(const std::string& input);
 void applyWholeWordReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
+void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 
@@ -418,19 +450,21 @@ std::string performReplacements(Language mainlang, const std::string& input) {
     // " chinese letter  chinese letter " -> "2 chinese letters"
     result = factorizeChineseLetters(result);
 
-    // Replace symbols
-    // 🔑 -> کلید
+    // Main Language specific
     switch (mainlang) {
         case Language::ARABIC:
+        // 🔑 -> مفتاح
         applyNormalReplacementsWithSpace(result, ARABIC_SYMBOL_REPLACEMENTS);
         break;
 
         case Language::PERSIAN:
+        // 🔑 -> کلید
         applyNormalReplacementsWithSpace(result, PERSIAN_SYMBOL_REPLACEMENTS);
         break;
 
         default:
         case Language::ENGLISH:
+        // 🔑 -> key
         //applyNormalReplacementsWithSpace(result, PERSIAN_SYMBOL_REPLACEMENTS);
         break;
     }
@@ -451,9 +485,14 @@ std::string performReplacements(Language mainlang, const std::string& input) {
 
         switch (language) {
             case Language::ARABIC:
+            // 8:54 م ->
+            //   8:54 مساءً
+            if(mainlang == Language::ARABIC) doArabicSpecificReplacements(segment_text); // Should be before ArabicNumberConverter and applyWholeWordReplacements
+            // @ -> فی
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ARABIC);
+            // ا -> الف
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_ARABIC);
-            if(mainlang == Language::ARABIC) doArabicSpecificReplacements(segment_text); // Should be before ArabicNumberConverter
+
             if(mainlang != Language::PERSIAN) //Persian users don't work with arabic numbers
                 segment_text = ArabicNumberConverter::normalize_text(segment_text);
             else
@@ -461,16 +500,22 @@ std::string performReplacements(Language mainlang, const std::string& input) {
             break;
 
             case Language::PERSIAN:
+            // ة
             applyNormalReplacements(segment_text, NORMAL_REPLACEMENTS_PERSIAN_NO_SPACE);
+            // @
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_PERSIAN);
+            // Empty
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_PERSIAN);
+
             segment_text = PersianNumberConverter::normalize_text(segment_text);
             break;
 
             default:
             case Language::ENGLISH:
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ENGLISH);
+            // @
             applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_ENGLISH);
+
             segment_text = EnglishNumberConverter::normalize_text(segment_text);
             break;
         }
@@ -555,6 +600,13 @@ std::string factorizeChineseLetters(const std::string& input) {
 }
 
 void applyWholeWordReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
+    for (const auto& pair : replacements) {
+        std::regex pattern("\\b" + pair.first + "\\b");
+        result = std::regex_replace(result, pattern, pair.second);
+    }
+}
+
+void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
     for (const auto& pair : replacements) {
         std::regex pattern("\\b" + pair.first + "\\b");
         result = std::regex_replace(result, pattern, pair.second);
