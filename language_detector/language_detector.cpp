@@ -207,10 +207,15 @@ bool LanguageDetector::has_arabic_diacritics(const std::vector<uint32_t> &word) 
 static const std::unordered_set<std::u32string> AL_EXCEPTIONS = {
     U"الله",
     U"اللّه",
+    U"الرحمن",
+    U"الرحیم", //در بسم الله الرحمن الرحیم
     U"الهی",
     U"الحسن",
     U"الحسین",
+    U"الشهدا", //سید الشهدا
+    U"العابدین", //زین العابدین
     U"الباقر",
+    U"العلوم", //باقر العلوم
     U"الصادق",
     U"الرضا",
     U"الکاظم",
@@ -222,7 +227,6 @@ static const std::unordered_set<std::u32string> AL_EXCEPTIONS = {
     U"السلام", //علیه السلام
     U"الدین",
     U"آله",
-
     U" ال", //L
     U"الاصل", //ایرانی الاصل
     U"التأسیس", // جدیدالتأسیس
@@ -276,6 +280,7 @@ static const std::unordered_set<std::u32string> AL_EXCEPTIONS = {
     U"الهه",
     U"الا ",
     U"الهام",
+    U"القاب",
     U"التیام",
     U"الحان",
     U"الزام",

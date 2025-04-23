@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(NormalizeText)
+project(NormalizeCSV)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,8 +11,10 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
+find_package(ICU REQUIRED COMPONENTS uc i18n io)
+
 # List all source files
-add_executable(NormalizeCSV 
+add_executable(${PROJECT_NAME} 
     main.cpp 
     replacement.cpp
     language_detector/language_detector.cpp
@@ -20,4 +22,9 @@ add_executable(NormalizeCSV
 
 include_directories(language_detector)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+target_link_libraries(${PROJECT_NAME} 
+    PRIVATE
+        ICU::uc    # Core Unicode support
+        ICU::i18n  # Internationalization
+        ICU::io
+)

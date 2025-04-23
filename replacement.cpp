@@ -13,6 +13,11 @@
 #include <unordered_map>
 #include <vector>
 
+#include <unicode/regex.h>
+#include <unicode/unistr.h>
+#include <unicode/regex.h>  // Correct header for ICU regex
+#include <unicode/ustream.h>
+
 // UTF-8 character replacements
 static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_NO_SPACE_ALL = {
     // Arabic digits (٠-٩)
@@ -97,8 +102,11 @@ static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENT
 
 // Whole word replacements for Arabic
 static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENTS_ARABIC = {
+    // Arabic Letters
+    {"ء", "همزة"},
     {"أ", "ألف"},
     {"ا", "ألف"},
+    {"آ", "ألف مدة"},
     {"ب", "باء"},
     {"ت", "تاء"},
     {"ث", "ثاء"},
@@ -119,17 +127,27 @@ static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENT
     {"غ", "غين"},
     {"ف", "فاء"},
     {"ق", "قاف"},
-    {"ک", "كاف"},
-    {"ك", "كاف"},
-    {"ک", "گاف"},
+    {"ك", "كاف"},  // Standard Arabic kaf
     {"ل", "لام"},
     {"م", "ميم"},
     {"ن", "نون"},
-    {"و", "واو"},
+    //{"و", "واو"},
     {"ه", "هاء"},
-    {"ة", "تاء مربوطة"},
-    {"ی", "ياء"},
     {"ي", "ياء"},
+    {"ى", "ألف مقصورة"}, //Letter is really different from the above
+    {"ة", "تاء مربوطة"},
+
+    // Persian Additional Letters
+    {"پ", "په"},      // Pe
+    {"چ", "چه"},      // Che
+    {"ژ", "ژه"},      // Zhe
+    {"گ", "گاف"},     // Gaf
+    {"ک", "کاف"},     // Persian Kaf (different from Arabic ك)
+
+    // Arabic Variants
+    {"إ", "ألف"},
+    {"ئ", "ياء"},
+    {"ؤ", "واو"},
 };
 
 // Whole word replacements for English
@@ -254,6 +272,7 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_AL
     {"ﷻ", "جل جلاله"},
     {"(ص)", "صلى الله عليه و آله"},
     {"(ع)", "علیه السلام"},
+    {"ا…", "الله"},
 
     // Lowercase Greek
     {"α", "alpha"}, {"ά", "alpha"}, {"β", "beta"}, {"γ", "gamma"}, {"δ", "delta"}, {"ε", "epsilon"}, {"έ", "epsilon"}, {"ζ", "zeta"}, {"η", "eta"}, {"ή", "eta"}, {"θ", "theta"}, {"ι", "iota"}, {"ί", "iota"}, {"κ", "kappa"}, {"λ", "lambda"}, {"μ", "mu"}, {"ν", "nu"}, {"ξ", "xi"}, {"ο", "omicron"}, {"ό", "omicron"}, {"π", "pi"}, {"ρ", "rho"}, {"σ", "sigma"}, {"ς", "sigma"}, {"τ", "tau"}, {"υ", "upsilon"}, {"ύ", "upsilon"}, {"φ", "phi"}, {"χ", "chi"}, {"ψ", "psi"}, {"ω", "omega"}, {"ώ", "omega"},
@@ -483,7 +502,7 @@ std::string performReplacements(Language mainlang, const std::string& input) {
             // @ -> فی
             applyNormalReplacementsWithSpace(segment_text, NORMAL_REPLACEMENTS_ARABIC);
             // ا -> الف
-            applyWholeWordReplacements(segment_text, WHOLE_WORD_REPLACEMENTS_ARABIC);
+            applyWholeWordReplacementsArabic(segment_text, WHOLE_WORD_REPLACEMENTS_ARABIC);
 
             if(mainlang != Language::PERSIAN) //Persian users don't work with arabic numbers
                 segment_text = ArabicNumberConverter::normalize_text(segment_text);
@@ -589,9 +608,57 @@ void applyWholeWordReplacements(std::string& result, const std::unordered_map<st
 }
 
 void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
-    for (const auto& pair : replacements) {
-        std::regex pattern("\\b" + pair.first + "\\b");
-        result = std::regex_replace(result, pattern, pair.second);
+    if (replacements.empty()) return;
+
+    icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(result);
+
+    // Build combined pattern and replacement strings
+    icu::UnicodeString patternStr;
+    std::vector<icu::UnicodeString> replacementStrs;
+    bool first = true;
+
+    for (const auto& replacement : replacements) {
+        const icu::UnicodeString target = icu::UnicodeString::fromUTF8(replacement.first);
+        replacementStrs.push_back(icu::UnicodeString::fromUTF8(replacement.second));
+
+        if (!first) patternStr.append("|");
+        patternStr.append("\\b(");
+        patternStr.append(target);
+        patternStr.append(")\\b");
+        first = false;
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    icu::RegexMatcher matcher(patternStr, 0, status);
+    if (U_FAILURE(status)) return;
+
+    matcher.reset(ustr);
+    icu::UnicodeString resultStr;
+    int32_t lastEnd = 0;
+
+    while (matcher.find(status) && U_SUCCESS(status)) {
+        // Append text between matches
+        resultStr.append(ustr, lastEnd, matcher.start(status) - lastEnd);
+        
+        // Find which group matched and use corresponding replacement
+        for (int32_t i = 1; i <= matcher.groupCount(); ++i) {
+            if (matcher.start(i, status) >= 0) {
+                resultStr.append(replacementStrs[i-1]);
+                break;
+            }
+        }
+        
+        lastEnd = matcher.end(status);
+    }
+
+    // Append remaining text
+    if (U_SUCCESS(status)) {
+        resultStr.append(ustr, lastEnd, ustr.length() - lastEnd);
+        
+        // Convert back to std::string
+        std::string newResult;
+        resultStr.toUTF8String(newResult);
+        result = newResult;
     }
 }
 
