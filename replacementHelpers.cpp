@@ -35,6 +35,16 @@ std::string toLower(const std::string& str) {
     return lowerStr;
 }
 
+void removeUnwantedUnicodeChars(std::string &result, const std::vector<std::string> &removements) {
+    
+    for (const auto& seq : removements) {
+        size_t pos = 0;
+        while ((pos = result.find(seq, pos)) != std::string::npos) {
+            result.erase(pos, seq.length());
+        }
+    }
+}
+
 std::string factorizeChineseLetters(const std::string& input) {
     std::string result;
     size_t pos = 0;

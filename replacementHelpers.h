@@ -8,6 +8,7 @@
 std::vector<std::string> split(const std::string& s, char delimiter);
 std::string join(const std::vector<std::string>& vec, char delimiter);
 std::string toLower(const std::string& str);
+void removeUnwantedUnicodeChars(std::string &result, const std::vector<std::string> &removements);
 std::string factorizeChineseLetters(const std::string& input);
 bool is_cjk(uint32_t cp);
 std::string replace_cjk_with_placeholder(const std::string& input);
