@@ -268,7 +268,7 @@ static const std::unordered_map<std::string, std::string> WHOLE_WORD_REPLACEMENT
 };
 
 // Normal replacements (anywhere in string) for all languages
-static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_ALL = {
+static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_WITH_SPACE_ALL = {
     {"ﷻ", "جل جلاله"},
     {"(ص)", "صلى الله عليه و آله"},
     {"(ع)", "علیه السلام"},
@@ -333,19 +333,6 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PE
     {"=", "مساوی"},  
 };
 
-void doArabicSpecificReplacements(std::string &segment_text)
-{
-    // Matches: number → whitespace → "ص" → followed by non-Arabic OR end-of-string
-    std::regex pattern1(R"((\d+\s)ص([^\wء-ي]|$))");  // [^\wء-ي] = not a word char or Arabic letter
-    std::string replacement1 = "$1صباحاً ";
-    segment_text = std::regex_replace(segment_text, pattern1, replacement1);
-
-    // Matches: number → whitespace → "م" → followed by non-Arabic OR end-of-string
-    std::regex pattern2(R"((\d+\s)م([^\wء-ي]|$))");  // [^\wء-ي] = not a word char or Arabic letter
-    std::string replacement2 = "$1مساءً ";
-    segment_text = std::regex_replace(segment_text, pattern2, replacement2);
-}
-
 // =============== HELPER FUNCTIONS ===============
 std::vector<std::string> split(const std::string& s, char delimiter);
 std::string join(const std::vector<std::string>& vec, char delimiter);
@@ -357,6 +344,12 @@ void applyWholeWordReplacements(std::string& result, const std::unordered_map<st
 void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
+void doArabicSpecificReplacements(std::string &segment_text);
+void applyBitByteReplacements(std::string &result);
+void seperateCapitalAbbreviations(std::string &result);
+void seperateClock(std::string &result);
+void seperateDate(std::string &result);
+void seperateCamelCaseWords(std::string &result);
 
 // =============== MAIN REPLACEMENT FUNCTION ===============
 
@@ -364,6 +357,7 @@ std::string performReplacements(Language mainlang, const std::string& input) {
     std::string result = input;
 
     // Remove unwanted characters
+    // remove rtf, ltr, ...
     for (const auto& seq : UNWANTED_UNICODE_CHARS) {
         size_t pos = 0;
         while ((pos = result.find(seq, pos)) != std::string::npos) {
@@ -372,86 +366,36 @@ std::string performReplacements(Language mainlang, const std::string& input) {
     }
 
     // Replace Arabic numbers and different forms of english letters to simple english
+    // ۹ -> 9
+    // "𝐀" -> "A"
     applyNormalReplacements(result, NORMAL_REPLACEMENTS_NO_SPACE_ALL);
 
     // Apply universal normal replacements
-    applyNormalReplacementsWithSpace(result, NORMAL_REPLACEMENTS_ALL);
+    // "ا…" -> "الله"
+    // "α" -> "alpha"
+    applyNormalReplacementsWithSpace(result, NORMAL_REPLACEMENTS_WITH_SPACE_ALL);
 
     // Apply universal whole word replacements
-    applyWholeWordReplacements(result, WHOLE_WORD_REPLACEMENTS_ALL);
+    // Empty
+    //applyWholeWordReplacements(result, WHOLE_WORD_REPLACEMENTS_ALL);
 
-    // Byte unit replacements
-    result = std::regex_replace(result, std::regex("(^|\\s)B(\\b|\\s)"), "$1Byte$2");
-    result = std::regex_replace(result, std::regex("([0-9])B(\\b|\\s)"), "$1 Byte$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)KB(\\b|\\s)"), "$1Kilo Byte$2");
-    result = std::regex_replace(result, std::regex("([0-9])KB(\\b|\\s)"), "$1 Kilo Byte$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)MB(\\b|\\s)"), "$1Mega Byte$2");
-    result = std::regex_replace(result, std::regex("([0-9])MB(\\b|\\s)"), "$1 Mega Byte$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)GB(\\b|\\s)"), "$1Giga Byte$2");
-    result = std::regex_replace(result, std::regex("([0-9])GB(\\b|\\s)"), "$1 Giga Byte$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)TB(\\b|\\s)"), "$1Tera Byte$2");
-    result = std::regex_replace(result, std::regex("([0-9])TB(\\b|\\s)"), "$1 Tera Byte$2");
+    // Byte/bit unit replacements
+    applyBitByteReplacements(result);
 
-    result = std::regex_replace(result, std::regex("(^|\\s)b(\\b|\\s)"), "$1bit$2");
-    result = std::regex_replace(result, std::regex("([0-9])b(\\b|\\s)"), "$1 bit$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)Kb(\\b|\\s)"), "$1Kilo bit$2");
-    result = std::regex_replace(result, std::regex("([0-9])Kb(\\b|\\s)"), "$1 Kilo bit$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)Mb(\\b|\\s)"), "$1Mega bit$2");
-    result = std::regex_replace(result, std::regex("([0-9])Mb(\\b|\\s)"), "$1 Mega bit$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)Gb(\\b|\\s)"), "$1Giga bit$2");
-    result = std::regex_replace(result, std::regex("([0-9])Gb(\\b|\\s)"), "$1 Giga bit$2");
-    result = std::regex_replace(result, std::regex("(^|\\s)Tb(\\b|\\s)"), "$1Tera bit$2");
-    result = std::regex_replace(result, std::regex("([0-9])Tb(\\b|\\s)"), "$1 Tera bit$2");
-
-    // Handle camelCase and abbreviations
+    // Handle camelCase abbreviations
     // "doTheABC" -> "do The ABC"
-    result = std::regex_replace(result, std::regex("([a-z])([A-Z])"), "$1 $2");
-    result = std::regex_replace(result, std::regex("([a-z])([A-Z]{2,})(\\b|$)"), "$1 $2$3");
+    seperateCamelCaseWords(result);
 
     // Process capital sequences (2-4 letters only, longer sequences stay unchanged)
     // "ABCD" -> "A B C D"
-
-    std::regex capitalLetters(R"(\b([A-Z]{2,4})(?![A-Z]))");  // Uses word boundary instead of lookbehind
-    std::string temp;
-    std::sregex_iterator it(result.begin(), result.end(), capitalLetters);
-    std::sregex_iterator end;
-    size_t last_pos = 0;
-
-    for (; it != end; ++it) {
-        temp += result.substr(last_pos, it->position() - last_pos);
-        std::string letters = (*it)[1].str();
-        for (size_t i = 0; i < letters.size(); ++i) {
-            if (i != 0) temp += " ";
-            temp += letters[i];
-        }
-        last_pos = it->position() + it->length();
-    }
-    temp += result.substr(last_pos);
-    result = temp;
+    seperateCapitalAbbreviations(result);
 
     // Remove number separators
     // 204:20 -> 04 20
-    bool changed;
-    do {
-        changed = false;
-        std::regex slashBetweenNumbers("([0-9]+)/([0-9]+)");
-        std::string new_result = std::regex_replace(result, slashBetweenNumbers, "$1 $2");
-        if (new_result != result) {
-            changed = true;
-            result = new_result;
-        }
-    } while (changed);
+    seperateClock(result);
 
     // 02/28/2025 -> 02 28 2025
-    do {
-        changed = false;
-        std::regex colonBetweenNumbers("([0-9]+):([0-9]+)");
-        std::string new_result = std::regex_replace(result, colonBetweenNumbers, "$1 $2");
-        if (new_result != result) {
-            changed = true;
-            result = new_result;
-        }
-    } while (changed);
+    seperateDate(result);
 
     // CJK character replacement
     // "指事"-> "chinese letter  chinese letter"
@@ -730,4 +674,94 @@ std::string replace_cjk_with_placeholder(const std::string& input) {
     }
 
     return output;
+}
+
+void doArabicSpecificReplacements(std::string &segment_text)
+{
+    // Matches: number → whitespace → "ص" → followed by non-Arabic OR end-of-string
+    std::regex pattern1(R"((\d+\s)ص([^\wء-ي]|$))");  // [^\wء-ي] = not a word char or Arabic letter
+    std::string replacement1 = "$1صباحاً ";
+    segment_text = std::regex_replace(segment_text, pattern1, replacement1);
+
+    // Matches: number → whitespace → "م" → followed by non-Arabic OR end-of-string
+    std::regex pattern2(R"((\d+\s)م([^\wء-ي]|$))");  // [^\wء-ي] = not a word char or Arabic letter
+    std::string replacement2 = "$1مساءً ";
+    segment_text = std::regex_replace(segment_text, pattern2, replacement2);
+}
+
+void applyBitByteReplacements(std::string &result) {
+    result = std::regex_replace(result, std::regex("(^|\\s)B(\\b|\\s)"), "$1Byte$2");
+    result = std::regex_replace(result, std::regex("([0-9])B(\\b|\\s)"), "$1 Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)KB(\\b|\\s)"), "$1Kilo Byte$2");
+    result = std::regex_replace(result, std::regex("([0-9])KB(\\b|\\s)"), "$1 Kilo Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)MB(\\b|\\s)"), "$1Mega Byte$2");
+    result = std::regex_replace(result, std::regex("([0-9])MB(\\b|\\s)"), "$1 Mega Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)GB(\\b|\\s)"), "$1Giga Byte$2");
+    result = std::regex_replace(result, std::regex("([0-9])GB(\\b|\\s)"), "$1 Giga Byte$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)TB(\\b|\\s)"), "$1Tera Byte$2");
+    result = std::regex_replace(result, std::regex("([0-9])TB(\\b|\\s)"), "$1 Tera Byte$2");
+
+    result = std::regex_replace(result, std::regex("(^|\\s)b(\\b|\\s)"), "$1bit$2");
+    result = std::regex_replace(result, std::regex("([0-9])b(\\b|\\s)"), "$1 bit$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)Kb(\\b|\\s)"), "$1Kilo bit$2");
+    result = std::regex_replace(result, std::regex("([0-9])Kb(\\b|\\s)"), "$1 Kilo bit$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)Mb(\\b|\\s)"), "$1Mega bit$2");
+    result = std::regex_replace(result, std::regex("([0-9])Mb(\\b|\\s)"), "$1 Mega bit$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)Gb(\\b|\\s)"), "$1Giga bit$2");
+    result = std::regex_replace(result, std::regex("([0-9])Gb(\\b|\\s)"), "$1 Giga bit$2");
+    result = std::regex_replace(result, std::regex("(^|\\s)Tb(\\b|\\s)"), "$1Tera bit$2");
+    result = std::regex_replace(result, std::regex("([0-9])Tb(\\b|\\s)"), "$1 Tera bit$2");
+}
+
+void seperateCapitalAbbreviations(std::string &result) {
+    std::regex capitalLetters(R"(\b([A-Z]{2,4})(?![A-Z]))");  // Uses word boundary instead of lookbehind
+    std::string temp;
+    std::sregex_iterator it(result.begin(), result.end(), capitalLetters);
+    std::sregex_iterator end;
+    size_t last_pos = 0;
+
+    for (; it != end; ++it) {
+        temp += result.substr(last_pos, it->position() - last_pos);
+        std::string letters = (*it)[1].str();
+        for (size_t i = 0; i < letters.size(); ++i) {
+            if (i != 0) temp += " ";
+            temp += letters[i];
+        }
+        last_pos = it->position() + it->length();
+    }
+    temp += result.substr(last_pos);
+    result = temp;
+}
+
+void seperateClock(std::string &result)
+{
+    bool changed;
+    do {
+        changed = false;
+        std::regex slashBetweenNumbers("([0-9]+)/([0-9]+)");
+        std::string new_result = std::regex_replace(result, slashBetweenNumbers, "$1 $2");
+        if (new_result != result) {
+            changed = true;
+            result = new_result;
+        }
+    } while (changed);
+}
+
+void seperateDate(std::string &result) {
+
+    bool changed;
+    do {
+        changed = false;
+        std::regex colonBetweenNumbers("([0-9]+):([0-9]+)");
+        std::string new_result = std::regex_replace(result, colonBetweenNumbers, "$1 $2");
+        if (new_result != result) {
+            changed = true;
+            result = new_result;
+        }
+    } while (changed);
+}
+
+void seperateCamelCaseWords(std::string &result) {
+    result = std::regex_replace(result, std::regex("([a-z])([A-Z])"), "$1 $2");
+    result = std::regex_replace(result, std::regex("([a-z])([A-Z]{2,})(\\b|$)"), "$1 $2$3");
 }
