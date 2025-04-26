@@ -17,6 +17,7 @@ find_package(ICU REQUIRED COMPONENTS uc i18n io)
 add_executable(${PROJECT_NAME} 
     main.cpp 
     replacement.cpp
+    replacementHelpers.cpp
     language_detector/language_detector.cpp
 )
 
