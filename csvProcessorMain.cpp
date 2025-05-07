@@ -1,4 +1,4 @@
-#include "replacement.h"
+#include "normalize.h"
 #include "language_detector.h"
 #include <iostream>
 #include <fstream>

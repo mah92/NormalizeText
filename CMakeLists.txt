@@ -15,8 +15,8 @@ find_package(ICU REQUIRED COMPONENTS uc i18n io)
 
 # List all source files
 add_executable(${PROJECT_NAME} 
-    main.cpp 
-    replacement.cpp
+    csvProcessorMain.cpp 
+    normalize.cpp
     replacementHelpers.cpp
     language_detector/language_detector.cpp
 )
