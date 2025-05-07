@@ -1,19 +1,12 @@
-#ifndef REPLACEMENT_H
-#define REPLACEMENT_H
+#ifndef NORMALIZE_H
+#define NORMALIZE_H
 
 #include <string>
 #include <vector>
+#include <memory>
 #include "language_detector/language_detector.h"
 
-// Helper functions
-std::vector<std::string> split(const std::string& s, char delimiter);
-std::string join(const std::vector<std::string>& vec, char delimiter);
+void normalizeString(Language mainlang, const std::string& input,
+    std::string &normalizedString, std::vector <std::vector <char32_t>> &phonemes, std::string &phonemeString, std::string &idString);
 
-// Unicode conversion utilities
-std::wstring utf8_to_wstring(const std::string& str);
-std::string wstring_to_utf8(const std::wstring& str);
-
-// Main replacement function
-std::string performReplacements(Language mainlang, const std::string& input);
-
-#endif // REPLACEMENT_H
+#endif // NORMALIZE_H

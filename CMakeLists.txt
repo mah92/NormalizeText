@@ -25,22 +25,28 @@ pkg_check_modules(ESPEAK REQUIRED espeak-ng)
 add_executable(${PROJECT_NAME} 
     NormalizeCSVMain.cpp 
     normalize.cpp
-    replacementHelpers.cpp
+    replacements/replacements.cpp
+    replacements/replacementHelpers.cpp
     language_detector/language_detector.cpp
+    espeak_phonemize/phonemize.cpp
+    espeak_phonemize/phoneme_ids.cpp
+    nawar-halabi/ar_phonemizer.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE language_detector)
 
+# ONNX
 target_link_libraries(${PROJECT_NAME} PRIVATE onnxruntime::onnxruntime)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-        ICU::uc    # Core Unicode support
-        ICU::i18n  # Internationalization
-        ICU::io
-)
+# ICU
+target_link_libraries(${PROJECT_NAME} PRIVATE ICU::uc ICU::i18n ICU::io)
 
-# Include directories
+# Espeak
 target_include_directories(${PROJECT_NAME} PRIVATE ${ESPEAK_INCLUDE_DIRS})
-
-# Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE ${ESPEAK_LIBRARIES})
+
+# Find all .onnx files recursively from the source directory
+# Copy them to the build directory
+file(GLOB_RECURSE ONNX_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shakkelha/*.onnx")
+file(COPY ${ONNX_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+message(" Copied: " ${ONNX_FILES} " To " ${CMAKE_CURRENT_BINARY_DIR})

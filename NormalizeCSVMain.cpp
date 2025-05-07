@@ -6,10 +6,9 @@
 #include <algorithm>
 #include <chrono>  // For time measurement
 
-// Helper function to remove all pipe characters from a string
-void removeAllPipes(std::string& str) {
-    str.erase(std::remove(str.begin(), str.end(), '|'), str.end());
-}
+// Helper functions
+void removeAllPipes(std::string& str);
+static std::string join(const std::vector<std::string>& vec, char delimiter);
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -53,30 +52,36 @@ int main(int argc, char* argv[]) {
     size_t line_count = 0;
     long long total_processing_time_ns = 0;
 
-    std::string line;
-    while (std::getline(inputFile, line)) {
+    std::string inputLine;
+    while (std::getline(inputFile, inputLine)) {
         auto line_start = std::chrono::high_resolution_clock::now();
         line_count++;
         
         // First remove all pipes from the entire line
-        removeAllPipes(line);
+        removeAllPipes(inputLine);
         
-        // Process the line content
-        std::string processed = performReplacements(mainlang, line);
+        // Process the inputLine content
+        std::string normalizedString;
+        std::vector <std::vector <char32_t>> phonemes;
+        std::string phonemeString;
+        std::string idString;
+        normalizeString(mainlang, inputLine, normalizedString, phonemes, phonemeString, idString);
         
         // Remove any pipes that might have been in the processed data
-        removeAllPipes(processed);
+        removeAllPipes(normalizedString);
         
         // Create a vector with original content (without pipes) and processed version
         std::vector<std::string> columns;
-        columns.push_back(line);
-        columns.push_back(processed);
+        columns.push_back(inputLine);
+        columns.push_back(normalizedString);
         
         // Write to CSV file with pipe delimiter
         csvOutput << join(columns, '|') << "\n";
         
         // Write just the processed content to the text file
-        txtOutput << processed << "\n";
+        txtOutput << normalizedString << "\n";
+        //txtOutput << phonemeString << "\n";
+        //txtOutput << idString << "\n";
 
         auto line_end = std::chrono::high_resolution_clock::now();
         total_processing_time_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(line_end - line_start).count();
@@ -102,4 +107,17 @@ int main(int argc, char* argv[]) {
     std::cout << " - Average time per line: " << avg_time_per_line_ms << " ms\n";
     
     return 0;
+}
+
+void removeAllPipes(std::string& str) {
+    str.erase(std::remove(str.begin(), str.end(), '|'), str.end());
+}
+
+static std::string join(const std::vector<std::string>& vec, char delimiter) {
+    std::string result;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (i != 0) result += delimiter;
+        result += vec[i];
+    }
+    return result;
 }
