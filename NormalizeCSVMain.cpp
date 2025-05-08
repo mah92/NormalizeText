@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 
     // Variables for time measurement
     auto total_start = std::chrono::high_resolution_clock::now();
-    size_t line_count = 0;
+    int line_count = 0;
     long long total_processing_time_ns = 0;
 
     std::string inputLine;
@@ -95,8 +95,14 @@ int main(int argc, char* argv[]) {
         std::string idString;
 
         //print line_count with 6 digits into lineNumber
-        lineNumber = (std::ostringstream() << std::setw(6) << std::setfill('0') << line_count).str();
-        
+        char filepath[200];
+        if(line_count <= 10000 )
+            sprintf(filepath, "wav/%06d.wav", line_count);
+        else
+            sprintf(filepath, "wav2/%06d.wav", line_count);
+        lineNumber = std::string(filepath);
+
+        //normalize
         normalizeString(mainlang, ipa_mode, inputLine, normalizedString, ipaString);
         
         if(ipa_mode)
