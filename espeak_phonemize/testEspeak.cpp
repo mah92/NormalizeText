@@ -15,7 +15,7 @@ int main()
   piper::eSpeakPhonemeConfig phonemeConfig;
   phonemeConfig.voice = "en-us";
   piper::phonemize_eSpeak("this, is: a; test.", phonemeConfig, phonemes);  
-  std::string phonemeStr = piper::getPhonemeString(phonemes);
+  std::string phonemeStr = piper::getIpaString(phonemes);
   std::cout << "punctuation test: " << phonemeStr << std::endl;
   if (phonemeStr != "ðˈɪs, ɪz: ˈeɪ; tˈɛst.\n") {
     std::cerr << "FAIL\n" << std::endl;
@@ -27,7 +27,7 @@ int main()
   phonemes.clear();
   phonemeConfig.voice = "en-us";
   piper::phonemize_eSpeak("Test 1. Test 2.", phonemeConfig, phonemes);  
-  std::string phonemeStr2 = piper::getPhonemeString(phonemes);
+  std::string phonemeStr2 = piper::getIpaString(phonemes);
   std::cout << "punctuation test: " << phonemeStr2 << std::endl;
   if (phonemeStr2 != "tˈɛst wˈʌn.\ntˈɛst tˈuː.\n") {
     std::cerr << "FAIL\n" << std::endl;

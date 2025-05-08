@@ -211,7 +211,7 @@ void phonemize_codepoints(std::string text, CodepointsPhonemeConfig &config,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string getPhonemeString(const std::vector<std::vector<char32_t>> &phonemes) {
+std::string getIpaString(const std::vector<std::vector<char32_t>> &phonemes) {
   std::stringstream phonemeStr;
   for (auto &sentencePhonemes : phonemes) {
     for (auto phoneme : sentencePhonemes) {

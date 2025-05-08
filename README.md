@@ -57,8 +57,8 @@ sudo make install      # Install system-wide
 sudo ldconfig          # Update shared library cache
 
 # Test
-make && ./NormalizeCSV AR ../data/dataset_AR-EN.txt
-make && ./NormalizeCSV AR ../data/dataset_AR-EN-concise.txt
-make && ./NormalizeCSV FA ../data/dataset_FA-EN-AR.txt
-make && ./NormalizeCSV FA ../data/dataset_FA-EN-AR-concise.txt
-make && ./NormalizeCSV AR ../data/test.txt
+make && ./NormalizeCSV AR RAW ../data/dataset_AR-EN.txt
+make && ./NormalizeCSV AR IPA ../data/dataset_AR-EN-concise.txt
+make && ./NormalizeCSV FA RAW ../data/dataset_FA-EN-AR.txt
+make && ./NormalizeCSV FA IPA ../data/dataset_FA-EN-AR-concise.txt
+make && ./NormalizeCSV AR IPA ../data/test.txt

@@ -126,7 +126,6 @@ static bool initialized = false;
 
 int shakkelha_initialize(const std::string model_address) {
     if (initialized) {
-        std::cerr << "Warning: Model already initialized." << std::endl;
         return 0; // or an error code if reinitialization is not allowed
     }
 

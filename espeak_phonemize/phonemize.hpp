@@ -77,7 +77,7 @@ void phonemize_eSpeak(std::string text, eSpeakPhonemeConfig &config,
   std::vector<std::vector<char32_t>> &phonemes); 
 
 //Helper functions for visualization
-std::string getPhonemeString(const std::vector<std::vector<char32_t>> &phonemes);
+std::string getIpaString(const std::vector<std::vector<char32_t>> &phonemes);
 
 std::string getIdString(const std::vector<std::vector<char32_t>> &phonemes, piper::PhonemeIdConfig &idConfig);
 

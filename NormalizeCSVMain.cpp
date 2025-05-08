@@ -1,18 +1,25 @@
 #include "normalize.h"
 #include "language_detector.h"
+#include "vits2-tokenizer/vits2-tokenizer.h"
+
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <locale>
 #include <algorithm>
 #include <chrono>  // For time measurement
+#include <iomanip>
+#include <sstream>
 
 // Helper functions
 void removeAllPipes(std::string& str);
+void removeAllSpaces(std::string& str);
+
 static std::string join(const std::vector<std::string>& vec, char delimiter);
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <main_language> <input_file>\n";
+    if (argc != 4) {
+        std::cerr << "Usage: " << argv[0] << " <main_language: EN, FA, AR> <token_type: RAW, IPA> <input_file>\n";
         return 1;
     }
 
@@ -22,7 +29,12 @@ int main(int argc, char* argv[]) {
     std::string mainLanguage(argv[1]);
     Language mainlang = LanguageDetector::string_to_language(mainLanguage);
 
-    std::ifstream inputFile(argv[2]);
+    int ipa_mode = 0; //RAW
+    if(strcmp(argv[2], "IPA") == 0)
+        ipa_mode = 1; //IPA
+
+    
+    std::ifstream inputFile(argv[3]);
     
     if (!inputFile.is_open()) {
         std::cerr << "Error opening input file: " << argv[2] << "\n";
@@ -30,20 +42,35 @@ int main(int argc, char* argv[]) {
     }
     
     // Create output filenames based on input filename
-    std::string inputFileName(argv[2]);
-    std::string csvOutputFile = inputFileName + "-normalized.csv";
-    std::string txtOutputFile = inputFileName + "-normalized.txt";
+    std::string inputFileName(argv[3]);
+    std::string csvOutputFile;
+    if(ipa_mode)
+        csvOutputFile = inputFileName + "-ipa.csv";
+    else
+        csvOutputFile = inputFileName + "-raw.csv";
+    std::string normalizedTxtOutputFile = inputFileName + "-normalized.txt";
     
     std::ofstream csvOutput(csvOutputFile);
-    std::ofstream txtOutput(txtOutputFile);
+    std::ofstream normalizedTxtOutput(normalizedTxtOutputFile);
     
     if (!csvOutput.is_open()) {
         std::cerr << "Error opening CSV output file: " << csvOutputFile << "\n";
         return 1;
     }
     
-    if (!txtOutput.is_open()) {
-        std::cerr << "Error opening TXT output file: " << txtOutputFile << "\n";
+    if (!normalizedTxtOutput.is_open()) {
+        std::cerr << "Error opening TXT output file: " << normalizedTxtOutputFile << "\n";
+        return 1;
+    }
+
+    int err;
+    
+    if(ipa_mode == 0)
+        err = readFileToMap("../vocab-raw.txt");
+    else
+        err = readFileToMap("../vocab-ipa.txt");
+    if (err!= 0) {
+        std::cerr << "Error opening vocab file" << "\n";
         return 1;
     }
 
@@ -61,27 +88,45 @@ int main(int argc, char* argv[]) {
         removeAllPipes(inputLine);
         
         // Process the inputLine content
+        std::string lineNumber;
         std::string normalizedString;
-        std::vector <std::vector <char32_t>> phonemes;
-        std::string phonemeString;
+        std::string ipaString;
+        std::vector<uint8_t> idVector;
         std::string idString;
-        normalizeString(mainlang, inputLine, normalizedString, phonemes, phonemeString, idString);
+
+        //print line_count with 6 digits into lineNumber
+        lineNumber = (std::ostringstream() << std::setw(6) << std::setfill('0') << line_count).str();
         
+        normalizeString(mainlang, ipa_mode, inputLine, normalizedString, ipaString);
+        
+        if(ipa_mode)
+            idVector = string_to_id_vector(ipaString);
+        else
+            idVector = string_to_id_vector(normalizedString);
+
+        idString = id_vector_to_id_string(idVector);
+
         // Remove any pipes that might have been in the processed data
         removeAllPipes(normalizedString);
+        if(ipa_mode)
+            removeAllSpaces(ipaString);
         
         // Create a vector with original content (without pipes) and processed version
         std::vector<std::string> columns;
+        columns.push_back(lineNumber);
         columns.push_back(inputLine);
         columns.push_back(normalizedString);
+        if(ipa_mode)
+            columns.push_back(ipaString);
+        columns.push_back(idString);
         
         // Write to CSV file with pipe delimiter
         csvOutput << join(columns, '|') << "\n";
         
         // Write just the processed content to the text file
-        txtOutput << normalizedString << "\n";
-        //txtOutput << phonemeString << "\n";
-        //txtOutput << idString << "\n";
+        normalizedTxtOutput << normalizedString << "\n";
+        //normalizedTxtOutput << ipaString << "\n";
+        //normalizedTxtOutput << idString << "\n";
 
         auto line_end = std::chrono::high_resolution_clock::now();
         total_processing_time_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(line_end - line_start).count();
@@ -92,7 +137,7 @@ int main(int argc, char* argv[]) {
 
     inputFile.close();
     csvOutput.close();
-    txtOutput.close();
+    normalizedTxtOutput.close();
     
     // Calculate and output timing information
     double avg_time_per_line_ns = static_cast<double>(total_processing_time_ns) / line_count;
@@ -100,7 +145,7 @@ int main(int argc, char* argv[]) {
     
     std::cout << "Processing complete. Output written to:\n";
     std::cout << " - " << csvOutputFile << " (CSV with original and processed text)\n";
-    std::cout << " - " << txtOutputFile << " (processed text only)\n";
+    std::cout << " - " << normalizedTxtOutputFile << " (processed text only)\n";
     std::cout << "\nPerformance metrics:\n";
     std::cout << " - Total lines processed: " << line_count << "\n";
     std::cout << " - Total processing time: " << (total_time_ns / 1000000.0) << " ms\n";
@@ -111,6 +156,10 @@ int main(int argc, char* argv[]) {
 
 void removeAllPipes(std::string& str) {
     str.erase(std::remove(str.begin(), str.end(), '|'), str.end());
+}
+
+void removeAllSpaces(std::string& str) {
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
 }
 
 static std::string join(const std::vector<std::string>& vec, char delimiter) {

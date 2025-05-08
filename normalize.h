@@ -6,7 +6,7 @@
 #include <memory>
 #include "language_detector/language_detector.h"
 
-void normalizeString(Language mainlang, const std::string& input,
-    std::string &normalizedString, std::vector <std::vector <char32_t>> &phonemes, std::string &phonemeString, std::string &idString);
+void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
+    std::string &normalizedString, std::string &ipaString);
 
 #endif // NORMALIZE_H

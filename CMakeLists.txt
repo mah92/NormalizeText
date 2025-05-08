@@ -30,7 +30,9 @@ add_executable(${PROJECT_NAME}
     language_detector/language_detector.cpp
     espeak_phonemize/phonemize.cpp
     espeak_phonemize/phoneme_ids.cpp
+    shakkelha/shakkelha.cpp
     nawar-halabi/ar_phonemizer.cpp
+    vits2-tokenizer/vits2-tokenizer.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE language_detector)
