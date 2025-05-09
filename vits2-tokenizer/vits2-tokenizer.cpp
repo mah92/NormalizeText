@@ -129,7 +129,7 @@ std::string id_vector_to_id_string(const std::vector<uint8_t>& bytes) {
     for (size_t i = 0; i < bytes.size(); ++i) {
         result += std::to_string(bytes[i]);
         if (i < bytes.size() - 1) {
-            result += "\\t";
+            result += "\t";
         }
     }
     
