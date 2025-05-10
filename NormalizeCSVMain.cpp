@@ -18,8 +18,8 @@ void removeAllSpaces(std::string& str);
 static std::string join(const std::vector<std::string>& vec, char delimiter);
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        std::cerr << "Usage: " << argv[0] << " <main_language: EN, FA, AR> <token_type: RAW, IPA> <input_file>\n";
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <main_language: EN, FA, AR> <input_file>\n";
         return 1;
     }
 
@@ -29,12 +29,13 @@ int main(int argc, char* argv[]) {
     std::string mainLanguage(argv[1]);
     Language mainlang = LanguageDetector::string_to_language(mainLanguage);
 
-    int ipa_mode = 0; //RAW
-    if(strcmp(argv[2], "IPA") == 0)
-        ipa_mode = 1; //IPA
+    int ipa_mode = 1;
+    //int ipa_mode = 0; //RAW
+    //if(strcmp(argv[2], "IPA") == 0)
+    //    ipa_mode = 1; //IPA
 
     
-    std::ifstream inputFile(argv[3]);
+    std::ifstream inputFile(argv[2]);
     
     if (!inputFile.is_open()) {
         std::cerr << "Error opening input file: " << argv[2] << "\n";
@@ -42,19 +43,16 @@ int main(int argc, char* argv[]) {
     }
     
     // Create output filenames based on input filename
-    std::string inputFileName(argv[3]);
-    std::string completeCsvOutputFile, vits2CsvOutputFile;
-    if(ipa_mode) {
-        completeCsvOutputFile = inputFileName + "-ipa.csv";
-        vits2CsvOutputFile = inputFileName + "-ipa-vits2.csv";
-    } else {
-        completeCsvOutputFile = inputFileName + "-raw.csv";
-        vits2CsvOutputFile = inputFileName + "-raw-vits2.csv";
-    }
+    std::string inputFileName(argv[2]);
+    std::string completeCsvOutputFile, vits2CsvOutputFile, normalizedCsvOutputFile, ipaCsvOutputFile;
+    completeCsvOutputFile = inputFileName + "-complete.csv";
+    normalizedCsvOutputFile = inputFileName + "-normalized.csv";
+    ipaCsvOutputFile = inputFileName + "-ipa.csv";
     std::string normalizedTxtOutputFile = inputFileName + "-normalized.txt";
     
     std::ofstream completeCsvOutput(completeCsvOutputFile);
-    std::ofstream vits2CsvOutput(vits2CsvOutputFile);
+    std::ofstream normalizedCsvOutput(normalizedCsvOutputFile);
+    std::ofstream ipaCsvOutput(ipaCsvOutputFile);
     std::ofstream normalizedTxtOutput(normalizedTxtOutputFile);
     
     if (!completeCsvOutput.is_open()) {
@@ -62,8 +60,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (!vits2CsvOutput.is_open()) {
-        std::cerr << "Error opening CSV output file: " << vits2CsvOutputFile << "\n";
+    if (!normalizedCsvOutput.is_open()) {
+        std::cerr << "Error opening CSV output file: " << normalizedCsvOutputFile << "\n";
+        return 1;
+    }
+
+    if (!ipaCsvOutput.is_open()) {
+        std::cerr << "Error opening CSV output file: " << ipaCsvOutputFile << "\n";
         return 1;
     }
     
@@ -72,7 +75,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int err;
+    /*int err;
     
     if(ipa_mode == 0)
         err = readFileToMap("../vocab-raw.txt");
@@ -81,7 +84,7 @@ int main(int argc, char* argv[]) {
     if (err!= 0) {
         std::cerr << "Error opening vocab file" << "\n";
         return 1;
-    }
+    }*/
 
     // Variables for time measurement
     auto total_start = std::chrono::high_resolution_clock::now();
@@ -101,13 +104,13 @@ int main(int argc, char* argv[]) {
         std::string speakerID;
         std::string normalizedString;
         std::string ipaString;
-        std::vector<uint8_t> idVector;
-        std::string idString;
+        //std::vector<uint8_t> idVector;
+        //std::string idString;
 
         //print line_count with 6 digits into filePath
         char filepath[200];
         //if(line_count <= 10000 )
-            sprintf(filepath, "wav/%06d.wav", line_count);
+            sprintf(filepath, "DUMMY1/%06d.wav", line_count);
         //else
         //    sprintf(filepath, "wav2/%06d.wav", line_count);
         filePath = std::string(filepath);
@@ -117,12 +120,12 @@ int main(int argc, char* argv[]) {
         //normalize
         normalizeString(mainlang, ipa_mode, inputLine, normalizedString, ipaString);
         
-        if(ipa_mode)
-            idVector = string_to_id_vector(ipaString);
-        else
-            idVector = string_to_id_vector(normalizedString);
+        //if(ipa_mode)
+        //    idVector = string_to_id_vector(ipaString);
+        //else
+        //    idVector = string_to_id_vector(normalizedString);
 
-        idString = id_vector_to_id_string(idVector);
+        //idString = id_vector_to_id_string(idVector);
 
         // Remove any pipes that might have been in the processed data
         removeAllPipes(normalizedString);
@@ -135,17 +138,23 @@ int main(int argc, char* argv[]) {
         completeColumns.push_back(speakerID);
         completeColumns.push_back(inputLine);
         completeColumns.push_back(normalizedString);
-        if(ipa_mode) completeColumns.push_back(ipaString);
-        completeColumns.push_back(idString);
+        completeColumns.push_back(ipaString);
+        //completeColumns.push_back(idString);
 
-        std::vector<std::string> vits2Columns;
-        vits2Columns.push_back(filePath);
-        vits2Columns.push_back(speakerID);
-        vits2Columns.push_back(idString);
+        std::vector<std::string> normalizedColumns;
+        normalizedColumns.push_back(filePath);
+        normalizedColumns.push_back(speakerID);
+        normalizedColumns.push_back(normalizedString);
+
+        std::vector<std::string> ipaColumns;
+        ipaColumns.push_back(filePath);
+        ipaColumns.push_back(speakerID);
+        ipaColumns.push_back(ipaString);
         
         // Write to CSV file with pipe delimiter
         completeCsvOutput << join(completeColumns, '|') << "\n";
-        vits2CsvOutput << join(vits2Columns, '|') << "\n";
+        normalizedCsvOutput << join(normalizedColumns, '|') << "\n";
+        ipaCsvOutput << join(ipaColumns, '|') << "\n";
         
         // Write just the processed content to the text file
         normalizedTxtOutput << normalizedString << "\n";
@@ -161,7 +170,8 @@ int main(int argc, char* argv[]) {
 
     inputFile.close();
     completeCsvOutput.close();
-    vits2CsvOutput.close();
+    normalizedCsvOutput.close();
+    ipaCsvOutput.close();
     normalizedTxtOutput.close();
     
     // Calculate and output timing information
@@ -169,8 +179,9 @@ int main(int argc, char* argv[]) {
     double avg_time_per_line_ms = avg_time_per_line_ns / 1'000'000.0;
     
     std::cout << "Processing complete. Output written to:\n";
-    std::cout << " - " << completeCsvOutputFile << " (CSV with original and processed text)\n";
-    std::cout << " - " << vits2CsvOutputFile << " (CSV with original and processed text)\n";
+    std::cout << " - " << completeCsvOutputFile << " (CSV with original, processed and ipa text)\n";
+    std::cout << " - " << normalizedCsvOutputFile << " (CSV with normalized text)\n";
+    std::cout << " - " << ipaCsvOutputFile << " (CSV with ipa text)\n";
     std::cout << " - " << normalizedTxtOutputFile << " (processed text only)\n";
     std::cout << "\nPerformance metrics:\n";
     std::cout << " - Total lines processed: " << line_count << "\n";
