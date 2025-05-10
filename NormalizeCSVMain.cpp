@@ -143,12 +143,12 @@ int main(int argc, char* argv[]) {
 
         std::vector<std::string> normalizedColumns;
         normalizedColumns.push_back(filePath);
-        normalizedColumns.push_back(speakerID);
+        //normalizedColumns.push_back(speakerID);
         normalizedColumns.push_back(normalizedString);
 
         std::vector<std::string> ipaColumns;
         ipaColumns.push_back(filePath);
-        ipaColumns.push_back(speakerID);
+        //ipaColumns.push_back(speakerID);
         ipaColumns.push_back(ipaString);
         
         // Write to CSV file with pipe delimiter
