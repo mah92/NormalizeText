@@ -102,19 +102,19 @@ inline std::vector<std::string> split_into_groups(const std::string& s, int grou
 // ==================== Conversion Logic ====================
 inline std::string group_to_words(int num) {
     static const std::vector<std::string> units = {
-        "", "بیر", "ایکی", "اوچ", "دؤرد", "بئش", "آلتی", "یئددی", "سگگیز", "دوققوز",
+        "", "بیر", "ایکی", "اوچ", "دؤرد", "بئش", "آلتی", "یئددی", "سککیز", "دوققوز",
         "اون", "اون بیر", "اون ایکی", "اون اوچ", "اون دؤرد", "اون بئش", "اون آلتی",
-        "اون یئددی", "اون سگگیز", "اون دوققوز"
+        "اون یئددی", "اون سککیز", "اون دوققوز"
     };
     
     static const std::unordered_map<int, std::string> tens = {
         {20, "ایییرمی"}, {30, "اوتوز"}, {40, "قیرخ"}, {50, "اَللی"},
-        {60, "آتمیش"}, {70, "یئتمیش"}, {80, "هشتاد"}, {90, "دوخسان"}
+        {60, "آتمیش"}, {70, "یئتمیش"}, {80, "سکسان"}, {90, "دوخسان"}
     };
 
     static const std::unordered_map<int, std::string> hundreds = {
         {100, "یوز"}, {200, "ایکی یوز"}, {300, "اوچ یوز"}, {400, "دؤرد یوز"},
-        {500, "بئش یوز"}, {600, "آلتی یوز"}, {700, "یئددی یوز"}, {800, "سگگیز یوز"}, {900, "دوققوز یوز"}
+        {500, "بئش یوز"}, {600, "آلتی یوز"}, {700, "یئددی یوز"}, {800, "سککیز یوز"}, {900, "دوققوز یوز"}
     };
 
     std::string result;
@@ -140,7 +140,7 @@ inline std::string group_to_words(int num) {
 
 inline std::string digit_to_word(char c) {
     switch(c) {
-        case '0': return "سیفر";
+        case '0': return "سیفیر";
         case '1': return "بیر";
         case '2': return "ایکی";
         case '3': return "اوچ";
@@ -148,7 +148,7 @@ inline std::string digit_to_word(char c) {
         case '5': return "بئش";
         case '6': return "آلتی";
         case '7': return "یئددی";
-        case '8': return "سگگیز";
+        case '8': return "سککیز";
         case '9': return "دوققوز";
         default: return "";
     }
@@ -190,7 +190,7 @@ inline SpecialNumberInfo detect_special_type(const std::string& normalized) {
 
 // ==================== Public API ====================
 inline std::string number_to_words(const std::string& normalized) {
-    if (normalized == "0") return "سیفر";
+    if (normalized == "0") return "سیفیر";
     
     std::vector<std::string> groups = split_into_groups(normalized);
     std::reverse(groups.begin(), groups.end()); // Reverse groups to process highest first
@@ -354,7 +354,7 @@ inline void run_tests() {
 
     std::vector<TestCase> tests = {
         // Basic numbers
-        {"0", "سیفر", false},
+        {"0", "سیفیر", false},
         {"5", "بئش", false},
         {"12", "اون ایکی", false},
         {"123", "یوز ایییرمی اوچ", false},
@@ -362,21 +362,21 @@ inline void run_tests() {
 
         // Decimal numbers
         {"12.34", "اون ایکی نوقته اوتوز دؤرد", false},
-        {"0.5", "سیفر نوقته بئش", false},
-        {".75", "سیفر نوقته یئتمیش بئش", false},
+        {"0.5", "سیفیر نوقته بئش", false},
+        {".75", "سیفیر نوقته یئتمیش بئش", false},
 
         // Mixed text and numbers
         {"The code is 1234", "The code is مین ایکی یوز اوتوز دؤرد", false},
         {"Call 555-1234", "Call بئش یوز اَللی بئش - مین ایکی یوز اوتوز دؤرد", false},
-        {"number 09123456789", "number سیفر، دوققوز، بیر، ایکی، اوچ، دؤرد، بئش، آلتې، یئددی، سگگیز، دوققوز", false},
+        {"number 09123456789", "number سیفیر، دوققوز، بیر، ایکی، اوچ، دؤرد، بئش، آلتې، یئددی، سککیز، دوققوز", false},
 
         // Edge cases
         {"", "", false}, // Empty input
         {"abc", "abc", false}, // No numbers
         {"ab.c", "ab.c", false}, // No numbers
-        {"v8a", "v سگگیز a", false}, // Glued
+        {"v8a", "v سککیز a", false}, // Glued
         {"123..45", "یوز ایییرمی اوچ .. قیرخ بئش", false}, // Invalid number
-        {"123,456,789", "یوز ایییرمی اوچ میلیون، دؤرد یوز اَللی آلتی مین، یئددی یوز هشتاد دوققوز", false} // With separators
+        {"123,456,789", "یوز ایییرمی اوچ میلیون، دؤرد یوز اَللی آلتی مین، یئددی یوز سکسان دوققوز", false} // With separators
     };
 
     int passed = 0;
