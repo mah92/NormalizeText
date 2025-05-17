@@ -25,7 +25,7 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_PE
     {"&", "اَند"},
     {"*", "ضرب در"},
     {"+", "به علاوه ی"},
-    {"/", "تقسیم بر"},
+    {"/", "اِسلَش"},
     {"\\", "بَک اِسلَش"},
     {"=", "مساوی"},  
 };

@@ -8,19 +8,13 @@
 // Initialize static character sets with proper Unicode code points
 const std::unordered_set<uint32_t> LanguageDetector::separators = {
     '\n',      // Whitespace
-    ';', ':', ',', '.', '!', '?', '"', '\'', '`', // ASCII punctuation
+    ';', '.', '!', '?', '"', '\'', '`', // ASCII punctuation
     '(', ')', '{', '}', '[', ']',  // Brackets
     0x061B, // Arabic semicolon (؛)
     0x060C, // Arabic comma (،)
     0x061F, // Arabic question mark (؟)
     0x00AB, // Left-pointing double angle quotation mark («)
     0x00BB  // Right-pointing double angle quotation mark (»)
-};
-
-// Separators that reset context to Persian when encountered
-const std::unordered_set<uint32_t> LanguageDetector::persian_reset_separators = {
-    '?', '!', '.', ')', '(',  // Basic sentence terminators
-    0x061F  // Arabic question mark (؟)
 };
 
 // Arabic vowel diacritics that force Arabic detection
@@ -31,6 +25,7 @@ const std::unordered_set<uint32_t> LanguageDetector::arabic_diacritics = {
     0x064D, // ARABIC KASRATAN (ٍ)
     0x064C, // ARABIC DAMMATAN (ٌ)
     0x0652  // ARABIC SUKUN (ْ)
+    // Not Kasre
 };
 
 const std::unordered_set<uint32_t> LanguageDetector::latin_letters = {
@@ -43,7 +38,7 @@ const std::unordered_set<uint32_t> LanguageDetector::latin_letters = {
 
 // Common symbols not within separators but don't change language context
 const std::unordered_set<uint32_t> LanguageDetector::neutral_letters = {
-    ' ', '\t', '@','#','$','%','^','&','*','_','-','+','~'
+    ' ', '\t', ',', ':', '@','#','$','%','^','&','*','_','-','+','~'
 };
 
 // Add digits set definition (Latin 0-9 and Arabic ۰-۹)
@@ -57,6 +52,7 @@ const std::unordered_set<uint32_t> LanguageDetector::persian_arabic_letters = {
     // Arabic letters common to both languages
     0x0622, // ARABIC LETTER ALEF WITH MADDA ABOVE (آ)
     0x0627, // ARABIC LETTER ALEF (ا)
+    0x0623, // ARABIC LETTER ALEF WITH HAMZA ABOVE (أ)
     0x0625, // ARABIC LETTER ALEF WITH HAMZA BELOW (إ)
     0x0626, // ARABIC LETTER YEH WITH HAMZA ABOVE (ئ)
     0x0624, // ARABIC LETTER WAW WITH HAMZA ABOVE (ؤ)
@@ -466,29 +462,33 @@ std::vector<Language> LanguageDetector::detect(const std::string &utf8_input) co
 // Process word when main language is Persian
 std::vector<Language> LanguageDetector::process_sentence_main_is_persian(const std::vector<uint32_t>& word, Language& current_context) const {
     std::vector<Language> tags;
+    bool maybe_arabic = false;
     
-    current_context = Language::PERSIAN;
+    if(current_context == Language::UNKNOWN)
+    // || current_context == Language::SEPARATOR) //. is a seperator and should not change language as seen in 3.14
+        current_context = Language::PERSIAN;
+
+    //current_context = Language::PERSIAN;
 
     // Handle Arabic diacritics and ال prefix
-    int st_al = starts_with_al(word)?1:0;
-    if (arabic_diacritics_count(word) + st_al >= 2) { //There are at least two signs of arabic
-        current_context = Language::ARABIC;
+    bool st_al = starts_with_al(word); //Needed for single arabic words.
+    if (arabic_diacritics_count(word)>= 2 || st_al ) { //There are at least two signs of arabic
+        maybe_arabic = true;
     }
 
     for (uint32_t cp : word) {
     
         if (digits.count(cp) || neutral_letters.count(cp)) {
-            if(current_context == Language::UNKNOWN)
-                current_context = Language::ENGLISH;
-            else {
-                ; //Keep previous language
-            }
+            //Keep previous language
         }
         else if (latin_letters.count(cp)) {
             current_context = Language::ENGLISH;
         }
-        else if (current_context == Language::ENGLISH && persian_arabic_letters.count(cp)) { //Not switch directly from persian to arabic as they are the same
-            current_context = Language::PERSIAN;
+        else if (persian_arabic_letters.count(cp)) {
+            if(maybe_arabic)
+                current_context = Language::ARABIC;
+            else
+                current_context = Language::PERSIAN;
         }
         tags.push_back(current_context);
     }

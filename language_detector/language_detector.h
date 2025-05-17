@@ -55,7 +55,6 @@ public:
 
 private:
     static const std::unordered_set<uint32_t> separators;
-    static const std::unordered_set<uint32_t> persian_reset_separators;
     static const std::unordered_set<uint32_t> arabic_diacritics;
     static const std::unordered_set<uint32_t> latin_letters;
     static const std::unordered_set<uint32_t> neutral_letters;

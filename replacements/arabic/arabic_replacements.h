@@ -60,7 +60,7 @@ static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_AR
     {"&", "و"},
     {"*", "مضروب في"},
     {"+", "زائد"},
-    {"/", "مقسوم على"},
+    {"/", "اِسلَش"},
     {"\\", "بَک اِسلَش"},
     {"=", "يساوي"},
 };

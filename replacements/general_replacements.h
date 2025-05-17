@@ -3,6 +3,16 @@
 
 // UTF-8 character replacements
 static const std::unordered_map<std::string, std::string> NORMAL_REPLACEMENTS_NO_SPACE_ALL = {
+    {"\t", "    "}, 
+    {"(", " , "}, {")", " , "},
+    {"<", " , "}, {">", " , "},
+    {"[", " , "}, {"]", " , "},
+    {"{", " , "}, {"}", " , "},
+    {"\"", " , "},
+    {"«", " , "}, {"»", " , "},
+    {"“", " , "}, {"”", " , "},
+    {"…", " "}, {"—", " "},
+    
     // Arabic digits (٠-٩)
     {"\xD9\xA0", "0"}, {"\xD9\xA1", "1"}, {"\xD9\xA2", "2"}, 
     {"\xD9\xA3", "3"}, {"\xD9\xA4", "4"}, {"\xD9\xA5", "5"},
