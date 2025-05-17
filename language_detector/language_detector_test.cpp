@@ -1,3 +1,6 @@
+//Test by:
+// g++ language_detector_test.cpp language_detector.cpp -o test
+
 #include "language_detector.h"
 #include <iostream>
 #include <vector>
@@ -112,6 +115,11 @@ int main() {
     run_test_case(long_fa, Language::PERSIAN, "Long FA (FA context)");
     run_test_case(long_fa, Language::ENGLISH, "Long FA (EN context)");
     run_test_case(long_fa, Language::ARABIC, "Long FA (AR context)");
+
+    const std::string long_ar = "أَمِتْنَا مُهْتَدِينَ غَيْرَ ضَالِّينَ‌َ. پنج";
+    run_test_case(long_ar, Language::PERSIAN, "Long FA (FA context)");
+    run_test_case(long_ar, Language::ENGLISH, "Long FA (EN context)");
+    run_test_case(long_ar, Language::ARABIC, "Long FA (AR context)");
 
     return 0;
 }

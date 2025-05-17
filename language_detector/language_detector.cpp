@@ -7,7 +7,7 @@
 
 // Initialize static character sets with proper Unicode code points
 const std::unordered_set<uint32_t> LanguageDetector::separators = {
-    ' ', '\t', '\n',      // Whitespace
+    '\n',      // Whitespace
     ';', ':', ',', '.', '!', '?', '"', '\'', '`', // ASCII punctuation
     '(', ')', '{', '}', '[', ']',  // Brackets
     0x061B, // Arabic semicolon (؛)
@@ -43,7 +43,7 @@ const std::unordered_set<uint32_t> LanguageDetector::latin_letters = {
 
 // Common symbols not within separators but don't change language context
 const std::unordered_set<uint32_t> LanguageDetector::neutral_letters = {
-    '@','#','$','%','^','&','*','_','-','+','~'
+    ' ', '\t', '@','#','$','%','^','&','*','_','-','+','~'
 };
 
 // Add digits set definition (Latin 0-9 and Arabic ۰-۹)
@@ -197,11 +197,12 @@ std::vector<LanguageDetector::TextSegment> LanguageDetector::split_into_segments
 }
 
 // Check if word contains Arabic diacritics
-bool LanguageDetector::has_arabic_diacritics(const std::vector<uint32_t> &word) const {
+int LanguageDetector::arabic_diacritics_count(const std::vector<uint32_t> &word) const {
+    int count = 0;
     for (uint32_t cp : word) {
-        if (arabic_diacritics.count(cp)) return true;
+        if (arabic_diacritics.count(cp)) count++;
     }
-    return false;
+    return count;
 }
 
 static const std::unordered_set<std::u32string> AL_EXCEPTIONS = {
@@ -428,14 +429,14 @@ bool LanguageDetector::starts_with_al(const std::vector<uint32_t>& word) const {
 }
 
 // Process a word segment according to language rules
-std::vector<Language> LanguageDetector::process_word(const std::vector<uint32_t> &word, Language &current_context) const {
+std::vector<Language> LanguageDetector::process_sentence(const std::vector<uint32_t> &word, Language &current_context) const {
     // Process based on main language
     if (main_language_ == Language::PERSIAN) {
-        return process_persian_word(word, current_context);
+        return process_sentence_main_is_persian(word, current_context);
     } else if (main_language_ == Language::ARABIC) {
-        return process_arabic_word(word, current_context);
+        return process_sentence_main_is_arabic(word, current_context);
     } else if (main_language_ == Language::ENGLISH) {
-        return process_english_word(word, current_context);
+        return process_sentence_main_is_english(word, current_context);
     }
     return std::vector<Language>(word.size(), Language::UNKNOWN);
 }
@@ -453,8 +454,8 @@ std::vector<Language> LanguageDetector::detect(const std::string &utf8_input) co
             result.insert(result.end(), segment.characters.size(), Language::SEPARATOR);
             
         } else {
-            // Process word and get language tags
-            std::vector<Language> tags = process_word(segment.characters, current_context);
+            // Process sentence and get language tags
+            std::vector<Language> tags = process_sentence(segment.characters, current_context);
             result.insert(result.end(), tags.begin(), tags.end());
         }
     }
@@ -463,14 +464,14 @@ std::vector<Language> LanguageDetector::detect(const std::string &utf8_input) co
 }
 
 // Process word when main language is Persian
-std::vector<Language> LanguageDetector::process_persian_word(const std::vector<uint32_t>& word, Language& current_context) const {
+std::vector<Language> LanguageDetector::process_sentence_main_is_persian(const std::vector<uint32_t>& word, Language& current_context) const {
     std::vector<Language> tags;
     
-    if(current_context == Language::UNKNOWN || current_context == Language::SEPARATOR)
-        current_context = Language::PERSIAN;
+    current_context = Language::PERSIAN;
 
     // Handle Arabic diacritics and ال prefix
-    if (has_arabic_diacritics(word) || starts_with_al(word)) {
+    int st_al = starts_with_al(word)?1:0;
+    if (arabic_diacritics_count(word) + st_al >= 2) { //There are at least two signs of arabic
         current_context = Language::ARABIC;
     }
 
@@ -496,7 +497,7 @@ std::vector<Language> LanguageDetector::process_persian_word(const std::vector<u
 }
 
 // Process word when main language is Arabic
-std::vector<Language> LanguageDetector::process_arabic_word(const std::vector<uint32_t>& word, Language& current_context) const {
+std::vector<Language> LanguageDetector::process_sentence_main_is_arabic(const std::vector<uint32_t>& word, Language& current_context) const {
     std::vector<Language> tags;
 
     if(current_context == Language::UNKNOWN || current_context == Language::SEPARATOR)
@@ -523,7 +524,7 @@ std::vector<Language> LanguageDetector::process_arabic_word(const std::vector<ui
 }
 
 // Process word when main language is English
-std::vector<Language> LanguageDetector::process_english_word(const std::vector<uint32_t>& word, Language& current_context) const {
+std::vector<Language> LanguageDetector::process_sentence_main_is_english(const std::vector<uint32_t>& word, Language& current_context) const {
     std::vector<Language> tags;
 
     if(current_context == Language::UNKNOWN || current_context == Language::SEPARATOR)

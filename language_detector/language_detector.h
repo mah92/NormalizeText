@@ -65,11 +65,11 @@ private:
     std::vector<uint32_t> utf8_to_codepoints(const std::string &utf8_str) const;
     std::string codepoint_to_utf8(uint32_t cp) const;
     std::vector<LanguageDetector::TextSegment> split_into_segments(const std::vector<uint32_t> &codepoints) const;
-    std::vector<Language> process_word(const std::vector<uint32_t> &word, Language &current_context) const;
-    std::vector<Language> process_persian_word(const std::vector<uint32_t> &word, Language &current_context) const;
-    std::vector<Language> process_arabic_word(const std::vector<uint32_t> &word, Language &current_context) const;
-    std::vector<Language> process_english_word(const std::vector<uint32_t> &word, Language &current_context) const;
-    bool has_arabic_diacritics(const std::vector<uint32_t> &word) const;
+    std::vector<Language> process_sentence(const std::vector<uint32_t> &word, Language &current_context) const;
+    std::vector<Language> process_sentence_main_is_persian(const std::vector<uint32_t> &word, Language &current_context) const;
+    std::vector<Language> process_sentence_main_is_arabic(const std::vector<uint32_t> &word, Language &current_context) const;
+    std::vector<Language> process_sentence_main_is_english(const std::vector<uint32_t> &word, Language &current_context) const;
+    int arabic_diacritics_count(const std::vector<uint32_t> &word) const;
     bool starts_with_al(const std::vector<uint32_t> &word) const;
 
     Language main_language_;
