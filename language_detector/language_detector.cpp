@@ -21,11 +21,11 @@ const std::unordered_set<uint32_t> LanguageDetector::separators = {
 const std::unordered_set<uint32_t> LanguageDetector::arabic_diacritics = {
     0x064E, // ARABIC FATHA (َ)
     0x064F, // ARABIC DAMMA (ُ)
-    0x064B, // ARABIC FATHATAN (ً)
+    //Not FATHATAN (ً)
     0x064D, // ARABIC KASRATAN (ٍ)
     0x064C, // ARABIC DAMMATAN (ٌ)
     0x0652  // ARABIC SUKUN (ْ)
-    // Not Kasre
+    // Not Kasre (ِ)
 };
 
 const std::unordered_set<uint32_t> LanguageDetector::latin_letters = {
@@ -363,6 +363,7 @@ static const std::unordered_set<std::u32string> AL_EXCEPTIONS = {
     U"البرز",
     U"الوند",
     U"البلاغه", //نهج البلاغه
+    U"الاحادیث", //جامع الاحادیث
     U"النصره",
     U"النّصره",
     U"القاعده‌",

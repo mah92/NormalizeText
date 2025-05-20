@@ -1,0 +1,10 @@
+rm 012393.wav
+rm 000396.wav
+rm 002179.wav
+rm 014331.wav
+rm 001687.wav
+rm 003084.wav
+rm 003270.wav
+rm 003932.wav
+rm 004307.wav
+rm 005973.wav
