@@ -4,8 +4,11 @@
 #include "espeak_phonemize/phonemize.hpp"
 #include "shakkelha/shakkelha.h"
 #include "nawar-halabi/ar_phonemizer.h"
+#include "persian_phoneme/persian_postprocess.h"
 
 #include <iostream>
+
+static bool persianResourcesInitialized = false;
 
 void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
      std::string &normalizedString, std::string &ipaString) 
@@ -60,7 +63,25 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
             if(ipa_mode) {
                 piper::phonemize_eSpeak(segment_text, phonemeConfig, phonemes); 
                 phoneme_segment = piper::getIpaString(phonemes);
-                ipaString +=phoneme_segment;
+
+                // ---- Persian homograph disambiguation + ezafe detection ----
+                if(language == Language::PERSIAN) {
+                    if(!persianResourcesInitialized) {
+                        persian_phoneme::initPersianResources(
+                            "./ezafe_model/model_quantized.onnx",
+                            "./ezafe_model/spiece.model",
+                            "./hazm_data/words.dat",
+                            "./hazm_data/verbs.dat",
+                            "./hazm_data/stopwords.dat",
+                            "./homograph/homograph_data.json"
+                        );
+                        persianResourcesInitialized = true;
+                    }
+                    phoneme_segment = persian_phoneme::postprocessPersianIPA(
+                        segment_text, phoneme_segment);
+                }
+
+                ipaString += phoneme_segment;
             }
 
             //piper::phonemize_eSpeak_Terminate();
