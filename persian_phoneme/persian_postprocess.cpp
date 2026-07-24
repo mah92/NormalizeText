@@ -160,21 +160,56 @@ std::string postprocessPersianIPA(
             // Check if word ends with 'i' or 'iː' → append 'je'
             // Otherwise append 'e' (if not already ending with 'e' or 'eː')
             // The IPA from eSpeak for Persian uses plain ASCII chars i/e plus
-            // U+02D0 (ː) as length marker. Check the last visible char.
+            // U+02D0 (ː) as length marker. Check the last meaningful phoneme
+            // codepoint (skip stress markers and length markers).
             size_t len = currentIpa.size();
             if (len >= 1) {
-                // Find the last visible ASCII char before any length marker
-                char lastAscii = 0;
-                for (size_t pos = len; pos > 0; --pos) {
-                    unsigned char c = static_cast<unsigned char>(currentIpa[pos-1]);
-                    if (c < 0x80 && std::isalpha(c)) {
-                        lastAscii = static_cast<char>(c);
+                // Find the last meaningful Unicode codepoint by scanning
+                // backwards through full UTF-8 codepoints, skipping
+                // diacritic/modifier characters (stress ˈˌ and length ː).
+                // This correctly handles words ending with non-ASCII
+                // phonemes like 'ʃ' (U+0283), 'ʒ' (U+0292), etc.
+                char32_t lastPhoneme = 0;
+                size_t pos = len;
+                while (pos > 0) {
+                    // Determine the start of the current UTF-8 codepoint
+                    size_t cp_start = pos - 1;
+                    unsigned char c = static_cast<unsigned char>(currentIpa[cp_start]);
+                    // Find the beginning of this multi-byte sequence
+                    while (cp_start > 0 && (c & 0xC0) == 0x80) {
+                        --cp_start;
+                        c = static_cast<unsigned char>(currentIpa[cp_start]);
+                    }
+                    // Decode the codepoint
+                    size_t cp_len = pos - cp_start;
+                    char32_t cp;
+                    if (cp_len == 1) {
+                        cp = static_cast<char32_t>(c);
+                    } else if (cp_len == 2) {
+                        cp = ((c & 0x1F) << 6) |
+                             (static_cast<unsigned char>(currentIpa[cp_start + 1]) & 0x3F);
+                    } else if (cp_len == 3) {
+                        cp = ((c & 0x0F) << 12) |
+                             ((static_cast<unsigned char>(currentIpa[cp_start + 1]) & 0x3F) << 6) |
+                             (static_cast<unsigned char>(currentIpa[cp_start + 2]) & 0x3F);
+                    } else {
+                        cp = ((c & 0x07) << 18) |
+                             ((static_cast<unsigned char>(currentIpa[cp_start + 1]) & 0x3F) << 12) |
+                             ((static_cast<unsigned char>(currentIpa[cp_start + 2]) & 0x3F) << 6) |
+                             (static_cast<unsigned char>(currentIpa[cp_start + 3]) & 0x3F);
+                    }
+                    // Skip stress markers (ˈ U+02C8, ˌ U+02CC) and
+                    // length markers (ː U+02D0)
+                    if (cp != 0x02C8 && cp != 0x02CC && cp != 0x02D0) {
+                        lastPhoneme = cp;
                         break;
                     }
+                    pos = cp_start;
                 }
-                if (lastAscii == 'i') {
+
+                if (lastPhoneme == U'i') {
                     currentIpa += "je";
-                } else if (lastAscii != 'e') {
+                } else if (lastPhoneme != U'e') {
                     currentIpa += "e";
                 }
             }
