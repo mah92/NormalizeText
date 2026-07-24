@@ -96,8 +96,20 @@ int main(int argc, char* argv[]) {
         auto line_start = std::chrono::high_resolution_clock::now();
         line_count++;
         
-        // First remove all pipes from the entire line
-        removeAllPipes(inputLine);
+        // Parse pipe-delimited fields: file_name|text1|text2|...
+        std::vector<std::string> fields;
+        std::stringstream ss(inputLine);
+        std::string field;
+        while (std::getline(ss, field, '|')) {
+            fields.push_back(field);
+        }
+        
+        if (fields.empty()) {
+            continue; // Skip empty lines
+        }
+        
+        // First field is the file name (e.g., LJ043-0084)
+        std::string originalFileName = fields[0];
         
         // Process the inputLine content
         std::string filePath;
@@ -107,18 +119,21 @@ int main(int argc, char* argv[]) {
         //std::vector<uint8_t> idVector;
         //std::string idString;
 
-        //print line_count with 6 digits into filePath
+        // Use the original file name (without extension) in the output path
         char filepath[200];
-        //if(line_count <= 10000 )
-            sprintf(filepath, "DUMMY1/%06d.wav", line_count);
-        //else
-        //    sprintf(filepath, "wav2/%06d.wav", line_count);
+        sprintf(filepath, "DUMMY1/%s.wav", originalFileName.c_str());
         filePath = std::string(filepath);
 
         speakerID = "0";
 
+        // Concatenate the remaining fields (text columns) for normalization
+        std::string textToNormalize;
+        for (size_t i = 1; i < fields.size(); ++i) {
+            textToNormalize += fields[i];
+        }
+
         //normalize
-        normalizeString(mainlang, ipa_mode, inputLine, normalizedString, ipaString);
+        normalizeString(mainlang, ipa_mode, textToNormalize, normalizedString, ipaString);
         
         //if(ipa_mode)
         //    idVector = string_to_id_vector(ipaString);
@@ -136,7 +151,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::string> completeColumns;
         completeColumns.push_back(filePath);
         completeColumns.push_back(speakerID);
-        completeColumns.push_back(inputLine);
+        completeColumns.push_back(textToNormalize);
         completeColumns.push_back(normalizedString);
         completeColumns.push_back(ipaString);
         //completeColumns.push_back(idString);
