@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <cstdint>
 
 std::vector<std::string> split(const std::string& s, char delimiter);
 std::string join(const std::vector<std::string>& vec, char delimiter);
