@@ -71,9 +71,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     persian-ezafe-albert-cpp/third_party/sentencepiece_minimal
 )
 
-# Define data directory for hazm_cpp (point to copied hazm_data in build dir)
+# Define data directory for hazm_cpp (point to assets in build dir)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    HAZM_DATA_DIR="./hazm_data/"
+    HAZM_DATA_DIR="./assets/"
 )
 
 # ONNX
@@ -86,19 +86,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ICU::uc ICU::i18n ICU::io)
 target_include_directories(${PROJECT_NAME} PRIVATE ${ESPEAK_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${ESPEAK_LIBRARIES})
 
-# Copy shakkelha ONNX model
-file(GLOB_RECURSE SHAKKELHA_ONNX "${CMAKE_CURRENT_SOURCE_DIR}/shakkelha/*.onnx")
-file(COPY ${SHAKKELHA_ONNX} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-message(" Copied shakkelha: " ${SHAKKELHA_ONNX} " To " ${CMAKE_CURRENT_BINARY_DIR})
-
-# Copy ezafe model files
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ezafe_model DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-message(" Copied ezafe_model to " ${CMAKE_CURRENT_BINARY_DIR}/ezafe_model)
-
-# Copy hazm data files
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/hazm_data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-message(" Copied hazm_data to " ${CMAKE_CURRENT_BINARY_DIR}/hazm_data)
-
-# Copy homograph data JSON
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/homograph/homograph_data.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/homograph)
-message(" Copied homograph_data.json to " ${CMAKE_CURRENT_BINARY_DIR}/homograph)
+# Copy all asset files (models, data) to build dir
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/assets/)
+message(" Copied assets/ to " ${CMAKE_CURRENT_BINARY_DIR}/assets/)

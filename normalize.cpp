@@ -16,13 +16,13 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
 {
     NormalizeConfig config;
     config.espeak_data_path = "";         // empty → use default
-    config.shakkelha_onnx = "./shakkelha.onnx";
-    config.ezafe_model_onnx = "./ezafe_model/model_quantized.onnx";
-    config.ezafe_model_spiece = "./ezafe_model/spiece.model";
-    config.hazm_words = "./hazm_data/words.dat";
-    config.hazm_verbs = "./hazm_data/verbs.dat";
-    config.hazm_stopwords = "./hazm_data/stopwords.dat";
-    config.homograph_data = "./homograph/homograph_data.json";
+    config.shakkelha_onnx = "./assets/shakkelha.onnx";
+    config.ezafe_model_onnx = "./assets/ezafe_model.onnx";
+    config.ezafe_model_spiece = "./assets/ezafe_spiece.model";
+    config.hazm_words = "./assets/hazm_words.dat";
+    config.hazm_verbs = "./assets/hazm_verbs.dat";
+    config.hazm_stopwords = "./assets/hazm_stopwords.dat";
+    config.homograph_data = "./assets/homograph_data.json";
     normalizeString(mainlang, ipa_mode, input, normalizedString, ipaString, config);
 }
 
