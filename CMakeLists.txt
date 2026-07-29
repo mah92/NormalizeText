@@ -63,7 +63,7 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     language_detector
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party
     ${CMAKE_CURRENT_SOURCE_DIR}/homograph
     ${CMAKE_CURRENT_SOURCE_DIR}/persian_phoneme
     hazm_cpp/include

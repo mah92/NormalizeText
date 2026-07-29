@@ -1,5 +1,5 @@
 #include "homograph_dict.h"
-#include "../include/json.hpp"
+#include "../third_party/nlohmann_json.hpp"
 
 #include <fstream>
 #include <stdexcept>
