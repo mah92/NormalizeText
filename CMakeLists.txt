@@ -23,18 +23,18 @@ pkg_check_modules(ESPEAK REQUIRED espeak-ng)
 
 # ---- hazm_cpp sources (compiled directly) ----
 set(HAZM_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/src/utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/src/stemmer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/src/conjugation.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/src/word_tokenizer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/src/lemmatizer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/src/stopwords.cpp
+    hazm_cpp/src/utils.cpp
+    hazm_cpp/src/stemmer.cpp
+    hazm_cpp/src/conjugation.cpp
+    hazm_cpp/src/word_tokenizer.cpp
+    hazm_cpp/src/lemmatizer.cpp
+    hazm_cpp/src/stopwords.cpp
 )
 
 # ---- ezafe_detector sources ----
 set(EZAFE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/../persian-ezafe-albert-cpp/src/ezafe_detector.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../persian-ezafe-albert-cpp/third_party/sentencepiece_minimal/sentencepiece_minimal.cpp
+    persian-ezafe-albert-cpp/src/ezafe_detector.cpp
+    persian-ezafe-albert-cpp/third_party/sentencepiece_minimal/sentencepiece_minimal.cpp
 )
 
 # ---- Homograph + Persian post-process sources ----
@@ -66,9 +66,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/homograph
     ${CMAKE_CURRENT_SOURCE_DIR}/persian_phoneme
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hazm/hazm_cpp/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../persian-ezafe-albert-cpp/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../persian-ezafe-albert-cpp/third_party/sentencepiece_minimal
+    hazm_cpp/include
+    persian-ezafe-albert-cpp/src
+    persian-ezafe-albert-cpp/third_party/sentencepiece_minimal
 )
 
 # Define data directory for hazm_cpp (point to copied hazm_data in build dir)
