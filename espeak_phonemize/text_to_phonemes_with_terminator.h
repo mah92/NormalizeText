@@ -111,7 +111,7 @@ const char *espeak_TextToPhonemesWithTerminator(const void **textptr, int textmo
         *textptr = 0;
         if(terminator) *terminator |= CLAUSE_TYPE_SENTENCE;
     } else {
-        *textptr += sr.copy_len;
+        *textptr = static_cast<const char*>(*textptr) + sr.copy_len;
     }
 
     return phonemes;
