@@ -18,10 +18,15 @@ public:
      *  @param spiece_path Path to spiece.model  */
     EzafeDetector(const std::string& onnx_path, const std::string& spiece_path);
 
-    /** Predict ezafe for list of space-separated Persian words. */
+    /** Predict ezafe for list of space-separated Persian words.
+     *  Returns an empty vector when the model failed to load (usable_ == false)
+     *  — callers must treat "no ezafe" as "unknown, keep original". */
     std::vector<Result> predict(const std::vector<std::string>& words);
 
+    bool usable() const { return usable_; }
+
 private:
+    bool usable_ = false;
     Ort::Env env_;
     std::unique_ptr<Ort::Session> session_;
     Ort::MemoryInfo mem_info_{Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)};

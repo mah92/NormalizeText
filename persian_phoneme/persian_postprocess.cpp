@@ -25,7 +25,17 @@ void initPersianResources(
 {
     if (g_initialized) return;
 
-    g_ezafeDetector = std::make_unique<EzafeDetector>(ezafeOnnxPath, ezafeSpiecePath);
+    // Empty path = component disabled (approved design: optional NormalizeText
+    // components are independent — skip whichever was not configured). The
+    // EzafeDetector constructor THROWS when its SentencePiece model fails to
+    // load, so it must never be constructed with empty paths (2026-09-04:
+    // this crash made EVERY matcha synthesis on Android return no audio).
+    bool ezafeEnabled = !ezafeOnnxPath.empty() && !ezafeSpiecePath.empty();
+    if (ezafeEnabled) {
+        g_ezafeDetector = std::make_unique<EzafeDetector>(ezafeOnnxPath, ezafeSpiecePath);
+    } else {
+        g_ezafeDetector.reset();
+    }
     g_lemmatizer = std::make_unique<hazm::Lemmatizer>(hazmWordsPath, hazmVerbsPath, true);
     g_stopwords = hazm::stopwords_list(hazmStopwordsPath);
     g_homographDict = homograph::loadHomographDict(homographJsonPath);
@@ -104,13 +114,16 @@ std::string postprocessPersianIPA(
         cleanWords.push_back(stripPersianPunctuation(textWords[i]));
     }
 
-    // Predict ezafe for all Persian words
+    // Predict ezafe for all Persian words (skip when the ezafe component is
+    // disabled or failed to load — null-safe, 2026-09-04).
     std::vector<EzafeDetector::Result> ezafeResults;
-    try {
-        ezafeResults = g_ezafeDetector->predict(cleanWords);
-    } catch (...) {
-        // If ezafe prediction fails, continue without it
-        return ipaString;
+    if (g_ezafeDetector) {
+        try {
+            ezafeResults = g_ezafeDetector->predict(cleanWords);
+        } catch (...) {
+            // If ezafe prediction fails, continue without it
+            return ipaString;
+        }
     }
 
     // --- Step 2: Homograph disambiguation ---
