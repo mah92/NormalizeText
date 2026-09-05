@@ -79,12 +79,38 @@ std::string factorizeChineseLetters(const std::string& input) {
     return result;
 }
 
+/** Escape ECMAScript regex metacharacters for safe std::regex construction.
+ *  The English replacement table contains entries like "c++"/"c#" whose raw
+ *  insertion broke the pattern — NDK libc++'s std::regex is STRICT and throws
+ *  regex_error("One of *?+{ was not preceded by a valid regular expression")
+ *  on "\\bc++\\b" (host libstdc++ happens to accept it) → ANY Latin run then
+ *  came back EMPTY on Android, so every mixed Persian/English utterance was
+ *  silent from matcha (2026-09-05, «متن فقط به matcha» regression). */
+static std::string regexEscape(const std::string& s) {
+    static const std::string special = ".^$|()[]{}*+?\\";
+    std::string out;
+    out.reserve(s.size() * 2);
+    for (char c : s) {
+        if (special.find(c) != std::string::npos) out += '\\';
+        out += c;
+    }
+    return out;
+}
+
 void applyWholeWordReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
     for (const auto& pair : replacements) {
-        std::regex pattern("\\b" + pair.first + "\\b");
-        result = std::regex_replace(result, pattern, pair.second);
+        try {
+            // Escape the word so table entries with regex metacharacters
+            // ("c++", "c#", "bit/s", …) never break the pattern (NDK libc++
+            // strictness). Unmatched pairs keep the running text unchanged.
+            std::regex pattern("\\b" + regexEscape(pair.first) + "\\b");
+            result = std::regex_replace(result, pattern, pair.second);
+        } catch (const std::regex_error& e) {
+            // Never let one bad entry kill the whole synthesis.
+        }
     }
 }
+
 
 void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements) {
     if (replacements.empty()) return;
