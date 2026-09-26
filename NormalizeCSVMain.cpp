@@ -1,6 +1,7 @@
 #include "normalize.h"
 #include "language_detector.h"
 #include "vits2-tokenizer/vits2-tokenizer.h"
+#include "grain_phones.h"
 
 #include <iostream>
 #include <fstream>
@@ -18,10 +19,26 @@ void removeAllSpaces(std::string& str);
 static std::string join(const std::vector<std::string>& vec, char delimiter);
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <main_language: EN, FA, AR> <input_file>\n";
+    // Optional: --grain <lexicon_dir>  also writes <input>-grain.csv with the phone stream in
+    // the 16 kHz GrainSpeech model's format (see grain_phones.h).
+    std::string grainLexDir;
+    std::vector<std::string> positional;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg(argv[i]);
+        if ((arg == "--grain" || arg == "-g") && i + 1 < argc) {
+            grainLexDir = argv[++i];
+        } else {
+            positional.push_back(arg);
+        }
+    }
+    if (positional.size() != 2) {
+        std::cerr << "Usage: " << argv[0]
+                  << " <main_language: EN, FA, AR> <input_file> [--grain <lexicon_dir>]\n";
         return 1;
     }
+    argc = static_cast<int>(positional.size()) + 1;
+    argv[1] = const_cast<char*>(positional[0].c_str());
+    argv[2] = const_cast<char*>(positional[1].c_str());
 
     // Set UTF-8 locale
     std::locale::global(std::locale("en_US.UTF-8"));
@@ -49,11 +66,32 @@ int main(int argc, char* argv[]) {
     normalizedCsvOutputFile = inputFileName + "-normalized.csv";
     ipaCsvOutputFile = inputFileName + "-ipa.csv";
     std::string normalizedTxtOutputFile = inputFileName + "-normalized.txt";
+    std::string grainCsvOutputFile = inputFileName + "-grain.csv";
     
     std::ofstream completeCsvOutput(completeCsvOutputFile);
     std::ofstream normalizedCsvOutput(normalizedCsvOutputFile);
     std::ofstream ipaCsvOutput(ipaCsvOutputFile);
     std::ofstream normalizedTxtOutput(normalizedTxtOutputFile);
+
+    // Optional GrainSpeech-format output (see grain_phones.h)
+    std::ofstream grainCsvOutput;
+    std::map<std::string, std::string> grainLexFa, grainLexEn;
+    std::string grainLangTag = "fa";
+    const bool grainEnabled = !grainLexDir.empty();
+    if (grainEnabled) {
+        grainCsvOutput.open(grainCsvOutputFile);
+        if (!grainCsvOutput.is_open()) {
+            std::cerr << "Error opening CSV output file: " << grainCsvOutputFile << "\n";
+            return 1;
+        }
+        grainLexFa = grain::loadInferenceLexicon(grainLexDir, "fa");
+        grainLexEn = grain::loadInferenceLexicon(grainLexDir, "en");
+        const std::string ml = mainLanguage;
+        grainLangTag = (ml == "EN" || ml == "en") ? "en" : "fa";
+        std::cout << "GrainSpeech phone output enabled: " << grainCsvOutputFile << " (lexicon dir "
+                  << grainLexDir << ", fa entries " << grainLexFa.size() << ", en entries "
+                  << grainLexEn.size() << ", tag " << grainLangTag << ")\n";
+    }
     
     if (!completeCsvOutput.is_open()) {
         std::cerr << "Error opening CSV output file: " << completeCsvOutputFile << "\n";
@@ -166,6 +204,23 @@ int main(int argc, char* argv[]) {
         //ipaColumns.push_back(speakerID);
         ipaColumns.push_back(ipaString);
         
+        // Optional: model-format phone stream (word-level lexicon + IPA fallback)
+        if (grainEnabled) {
+            const std::map<std::string, std::string>& lex =
+                (grainLangTag == "en") ? grainLexEn : grainLexFa;
+            std::string grainPhones;
+            try {
+                grainPhones = grain::toModelPhones(normalizedString, ipaString, lex, grainLangTag);
+            } catch (const std::exception& e) {
+                std::cerr << "grain phone conversion failed for " << originalFileName << ": "
+                          << e.what() << "\n";
+            }
+            std::vector<std::string> grainColumns;
+            grainColumns.push_back(filePath);
+            grainColumns.push_back(grainPhones);
+            grainCsvOutput << join(grainColumns, '|') << "\n";
+        }
+
         // Write to CSV file with pipe delimiter
         completeCsvOutput << join(completeColumns, '|') << "\n";
         normalizedCsvOutput << join(normalizedColumns, '|') << "\n";
@@ -188,6 +243,7 @@ int main(int argc, char* argv[]) {
     normalizedCsvOutput.close();
     ipaCsvOutput.close();
     normalizedTxtOutput.close();
+    if (grainCsvOutput.is_open()) grainCsvOutput.close();
     
     // Calculate and output timing information
     double avg_time_per_line_ns = static_cast<double>(total_processing_time_ns) / line_count;
@@ -197,6 +253,9 @@ int main(int argc, char* argv[]) {
     std::cout << " - " << completeCsvOutputFile << " (CSV with original, processed and ipa text)\n";
     std::cout << " - " << normalizedCsvOutputFile << " (CSV with normalized text)\n";
     std::cout << " - " << ipaCsvOutputFile << " (CSV with ipa text)\n";
+    if (grainEnabled)
+        std::cout << " - " << grainCsvOutputFile
+                  << " (CSV with phones in the GrainSpeech model format)\n";
     std::cout << " - " << normalizedTxtOutputFile << " (processed text only)\n";
     std::cout << "\nPerformance metrics:\n";
     std::cout << " - Total lines processed: " << line_count << "\n";
