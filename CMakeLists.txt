@@ -48,6 +48,8 @@ set(PERSIAN_POSTPROCESS_SOURCES
 add_executable(${PROJECT_NAME} 
     NormalizeCSVMain.cpp 
     normalize.cpp
+    grain_phones.cpp
+
     replacements/replacements.cpp
     replacements/replacementHelpers.cpp
     language_detector/language_detector.cpp

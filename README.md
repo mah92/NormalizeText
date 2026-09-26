@@ -128,15 +128,29 @@ make -j$(nproc)
 ./NormalizeCSV FA ../data/dataset_FA-EN-AR.txt
 ./NormalizeCSV AR ../data/dataset_AR-EN.txt
 ./NormalizeCSV EN ../data/dataset_EN.txt
+
+# optional: also emit the phone stream in the 16 kHz GrainSpeech model's format
+./NormalizeCSV FA ../data/dataset_FA-EN-AR.txt --grain ~/Basir/TTS/GrainSpeech
 ```
 
-**Arguments:** `<main_language: FA|EN|AR> <input_file>`
+**Arguments:** `<main_language: FA|EN|AR> <input_file> [--grain <lexicon_dir>]`
 
 **Output files** (written next to input):
 - `*-complete.csv` — original, normalized, and IPA text
 - `*-normalized.csv` — normalized text only
 - `*-ipa.csv` — IPA phonemes only
 - `*-normalized.txt` — normalized text (no metadata)
+- `*-grain.csv` — only with `--grain`: `path|phones` where `phones` is the phone stream the
+  16 kHz GrainSpeech TTS model expects (phoneme-level tokens, stress/length attached to the
+  vowel, every token tagged `fa:` / `en:`), e.g.
+  `fa:s fa:a fa:l fa:ˈɑ fa:m`. Words are looked up in `infer_lex_fa.txt` /
+  `infer_lex_en.txt` inside `<lexicon_dir>` — lexicons derived from the model's own
+  alignments — with the word's eSpeak IPA as fallback. Implemented in `grain_phones.h/.cpp`;
+  without the flag the program behaves exactly as before.
+
+  Why it exists: the plain IPA stream and the model's training convention disagree (measured
+  57 % positional token agreement, which made synthesis unintelligible); with these lexicons
+  the agreement is ~97 % (Persian) / ~91 % (English).
 
 ---
 
