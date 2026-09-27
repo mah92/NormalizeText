@@ -151,7 +151,9 @@ std::string postprocessPersianIPA(
             continue;
         }
 
-        // Homograph disambiguation: check if this word is a homograph
+        
+
+// Homograph disambiguation: check if this word is a homograph
         std::string currentIpa = ipaWord;
         if (g_homographDict.count(cleanWord) > 0) {
             std::string disambiguated = homograph::disambiguateHomograph(
@@ -167,6 +169,31 @@ std::string postprocessPersianIPA(
         if (i < ezafeResults.size()) {
             needsEzafe = ezafeResults[i].needs_ezafe &&
                          ezafeResults[i].confidence >= 0.7f;
+        }
+        // A real ezafe is never followed by a preposition/particle; without this guard the
+        // detector fires on phrases like «دانش‌آموزان در کلاس» and we hear «dāneshāmuzān-e dar».
+        if (needsEzafe && i + 1 < cleanedSentenceWords.size()) {
+            static const char* kParticles[] = {
+                "در", "به", "از", "بر", "با", "را", "و", "که", "تا", "بی",
+                "هم", "نیز", "اگر", "اما", "ولی", "چون", "زیرا", "پس", "یا"
+            };
+            std::string next = cleanedSentenceWords[i + 1];
+            // strip trailing punctuation so «در» / «در،» / «در.» match equally
+            static const char* kTrailing[] = {"،", "؛", "؟", "!", ":", "»", ")", "…"};
+            bool stripped = true;
+            while (stripped && !next.empty()) {
+                stripped = false;
+                for (const char* t : kTrailing) {
+                    size_t tl = std::strlen(t);
+                    if (next.size() >= tl && next.compare(next.size() - tl, tl, t) == 0) {
+                        next.erase(next.size() - tl);
+                        stripped = true;
+                    }
+                }
+            }
+            for (const char* p : kParticles) {
+                if (next == p) { needsEzafe = false; break; }
+            }
         }
 
         if (needsEzafe) {
