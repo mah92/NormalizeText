@@ -18,7 +18,11 @@ EzafeDetector::EzafeDetector(const std::string& onnx_path,
     try {
         Ort::SessionOptions session_options;
         session_options.SetIntraOpNumThreads(1);
-        session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+        // ANDROID (ARMv7 + ORT 1.18): ORT_ENABLE_ALL SIGBUSes (BUS_ADRALN) during
+        // session creation with this model family — see ADR-014/ADR-031. The v36
+        // commit claimed this fix but only changed the version file + ADR; the
+        // source edit is being committed here for the first time.
+        session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
         session_ = std::make_unique<Ort::Session>(env_, onnx_path.c_str(), session_options);
     } catch (...) {
         usable_ = false;
