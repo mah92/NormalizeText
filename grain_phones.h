@@ -1,40 +1,37 @@
 /*
  * grain_phones — NormalizeText -> GrainSpeech model phone format.
  *
- * The 16 kHz GrainSpeech model is trained on phoneme-level, language-tagged phone tokens
- * (e.g. "fa:ˈɑ", "en:iː"), where a token may hold several characters: stress (ˈ ˌ) attaches
- * to the FOLLOWING vowel, length (ː ˑ) and combining diacritics attach to the PRECEDING base,
- * and a tie bar (͡ ͜) joins two symbols into one affricate.
+ * ONE general path, the same one the training front-end used (phonemize_ipa.py):
  *
- * Feeding the model the plain espeak/IPA character stream instead (different convention,
- * different word-level choices) makes synthesis unintelligible, so this module reproduces the
- * training convention exactly:
- *   - word-by-word lookup in the lexicon derived from the model's own alignments
- *     (infer_lex_fa.txt / infer_lex_en.txt, produced by extract_lexicon_from_alignments.py),
- *   - espeak IPA groups as the fallback for out-of-vocabulary words,
- *   - every token tagged with its language (fa: / en:).
+ *   text -> NormalizeText (normalized + IPA) -> phone tokens -> language tag
  *
- * Port of phonemize_ipa.py + frontend_lexicon.py; keep the two in sync.
+ * Phone conventions: a token may hold several characters — stress (ˈ ˌ) attaches to the
+ * FOLLOWING vowel, length (ː ˑ) and combining diacritics attach to the PRECEDING base, a
+ * tie bar (͡ ͜) joins two symbols into one affricate — and every token is tagged with the
+ * utterance language (fa: / en:).
+ *
+ * There is deliberately NO lexicon here. An inference-side word list (infer_lex_fa.txt /
+ * infer_lex_en.txt, derived from the training alignments) was tried in September 2026 and
+ * removed on Ali's decision (2026-10-03: «واژهنامه باید حذف بشه»). That layer is what made
+ * the engine silently drop words, invented the whole «unknown word» class (32% of one real
+ * message was not in it) and, when patched with index-based group matching, read sentences
+ * out of order. The IPA stream is used in order, so no word can be dropped or displaced.
+ *
+ * Keep in sync with phonemize_ipa.py (ipa_to_phonemes + tag_language).
  */
 #ifndef GRAIN_PHONES_H
 #define GRAIN_PHONES_H
 
-#include <map>
 #include <string>
 #include <vector>
 
 namespace grain {
-
-// word -> phone tokens (space separated, already tagged) from <dir>/infer_lex_<lang>.txt
-std::map<std::string, std::string> loadInferenceLexicon(const std::string& dir,
-                                                        const std::string& lang);
 
 // One IPA group (e.g. "salˈɑm") -> phoneme tokens ({"s","a","l","ˈɑ","m"}).
 std::vector<std::string> ipaGroupToPhonemes(const std::string& group);
 
 // Normalized text + its IPA -> model-format phone string, e.g. "fa:s fa:a fa:l fa:ˈɑ fa:m".
 std::string toModelPhones(const std::string& normalized, const std::string& ipa,
-                          const std::map<std::string, std::string>& lexicon,
                           const std::string& langTag);
 
 }  // namespace grain

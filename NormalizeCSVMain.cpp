@@ -19,21 +19,21 @@ void removeAllSpaces(std::string& str);
 static std::string join(const std::vector<std::string>& vec, char delimiter);
 
 int main(int argc, char* argv[]) {
-    // Optional: --grain <lexicon_dir>  also writes <input>-grain.csv with the phone stream in
-    // the 16 kHz GrainSpeech model's format (see grain_phones.h).
-    std::string grainLexDir;
+    // Optional: --grain also writes <input>-grain.csv with the phone stream in the
+    // 16 kHz GrainSpeech model's format (see grain_phones.h).
+    bool grainFlag = false;
     std::vector<std::string> positional;
     for (int i = 1; i < argc; ++i) {
         std::string arg(argv[i]);
-        if ((arg == "--grain" || arg == "-g") && i + 1 < argc) {
-            grainLexDir = argv[++i];
+        if (arg == "--grain" || arg == "-g") {
+            grainFlag = true;
         } else {
             positional.push_back(arg);
         }
     }
     if (positional.size() != 2) {
         std::cerr << "Usage: " << argv[0]
-                  << " <main_language: EN, FA, AR> <input_file> [--grain <lexicon_dir>]\n";
+                  << " <main_language: EN, FA, AR> <input_file> [--grain]\n";
         return 1;
     }
     argc = static_cast<int>(positional.size()) + 1;
@@ -75,22 +75,18 @@ int main(int argc, char* argv[]) {
 
     // Optional GrainSpeech-format output (see grain_phones.h)
     std::ofstream grainCsvOutput;
-    std::map<std::string, std::string> grainLexFa, grainLexEn;
     std::string grainLangTag = "fa";
-    const bool grainEnabled = !grainLexDir.empty();
+    const bool grainEnabled = grainFlag;
     if (grainEnabled) {
         grainCsvOutput.open(grainCsvOutputFile);
         if (!grainCsvOutput.is_open()) {
             std::cerr << "Error opening CSV output file: " << grainCsvOutputFile << "\n";
             return 1;
         }
-        grainLexFa = grain::loadInferenceLexicon(grainLexDir, "fa");
-        grainLexEn = grain::loadInferenceLexicon(grainLexDir, "en");
         const std::string ml = mainLanguage;
         grainLangTag = (ml == "EN" || ml == "en") ? "en" : "fa";
-        std::cout << "GrainSpeech phone output enabled: " << grainCsvOutputFile << " (lexicon dir "
-                  << grainLexDir << ", fa entries " << grainLexFa.size() << ", en entries "
-                  << grainLexEn.size() << ", tag " << grainLangTag << ")\n";
+        std::cout << "GrainSpeech phone output enabled: " << grainCsvOutputFile
+                  << " (IPA stream, tag " << grainLangTag << ")\n";
     }
     
     if (!completeCsvOutput.is_open()) {
@@ -206,11 +202,9 @@ int main(int argc, char* argv[]) {
         
         // Optional: model-format phone stream (word-level lexicon + IPA fallback)
         if (grainEnabled) {
-            const std::map<std::string, std::string>& lex =
-                (grainLangTag == "en") ? grainLexEn : grainLexFa;
             std::string grainPhones;
             try {
-                grainPhones = grain::toModelPhones(normalizedString, ipaString, lex, grainLangTag);
+                grainPhones = grain::toModelPhones(normalizedString, ipaString, grainLangTag);
             } catch (const std::exception& e) {
                 std::cerr << "grain phone conversion failed for " << originalFileName << ": "
                           << e.what() << "\n";
