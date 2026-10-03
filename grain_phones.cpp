@@ -1,6 +1,7 @@
 #include "grain_phones.h"
 
 #include <cctype>
+#include <iostream>
 #include <fstream>
 #include <set>
 #include <sstream>
@@ -151,6 +152,34 @@ std::vector<std::string> ipaGroupToPhonemes(const std::string& group) {
     return out;
 }
 
+
+// PER_WORD_LANG (Ali 2026-10-03): the tag must follow the WORD, not the whole
+// utterance. A Persian sentence containing a URL or a Latin word made espeak
+// emit English IPA that was then tagged "fa:", and the Persian alphabet has no
+// such phones — they were reported as unknown and skipped. Same rule as the
+// training tokenizer, which tags every phone with the language of its text.
+std::string wordLangTag(const std::string& word, const std::string& fallback) {
+    for (size_t i = 0; i < word.size();) {
+        unsigned char c = static_cast<unsigned char>(word[i]);
+        size_t len = 1;
+        if ((c & 0x80) == 0x00) len = 1;
+        else if ((c & 0xE0) == 0xC0) len = 2;
+        else if ((c & 0xF0) == 0xE0) len = 3;
+        else if ((c & 0xF8) == 0xF0) len = 4;
+        if (i + len > word.size()) len = 1;
+        unsigned char c0 = c;
+        if (len == 1) {
+            if ((c0 >= 'A' && c0 <= 'Z') || (c0 >= 'a' && c0 <= 'z')) return "en";
+        } else if (len == 2) {
+            // Latin-1 / Latin Extended letters (U+00C0..U+024F) -> en
+            unsigned int cp = ((c0 & 0x1F) << 6) | (static_cast<unsigned char>(word[i + 1]) & 0x3F);
+            if (cp >= 0x00C0 && cp <= 0x024F) return "en";
+        }
+        i += len;
+    }
+    return fallback;
+}
+
 std::string toModelPhones(const std::string& normalized, const std::string& ipa,
                           const std::map<std::string, std::string>& lexicon,
                           const std::string& langTag) {
@@ -165,7 +194,17 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
     }
 
     const bool aligned = (words.size() == groups.size());
+    if (!aligned) {
+        // Ali 2026-10-03: «از روی بسیاری از کلمات می‌پره» — a URL, an
+        // emoji-prefixed word or a number makes the phonemizer emit a
+        // different number of groups than the text has words; the old code
+        // then DROPPED every word that was not in the lexicon.
+        std::cerr << "[grain] words=" << words.size() << " ipa_groups="
+                  << groups.size() << " MISALIGNED — covering the leftovers from the IPA"
+                  << std::endl;
+    }
     std::vector<std::string> out;
+    size_t gi = 0;                                  // next unused IPA group
     for (size_t i = 0; i < words.size(); ++i) {
         auto it = lexicon.find(words[i]);
         if (it != lexicon.end() && !it->second.empty()) {
@@ -174,9 +213,30 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
             while (ss >> tok) out.push_back(tok);
             continue;
         }
-        if (!aligned) continue;                     // unknown word, no group to fall back on
-        for (const std::string& p : ipaGroupToPhonemes(groups[i]))
-            out.push_back(langTag + ":" + p);
+        if (aligned) {
+            const std::string wl = wordLangTag(words[i], langTag);
+            for (const std::string& p : ipaGroupToPhonemes(groups[i]))
+                out.push_back(wl + ":" + p);
+            continue;
+        }
+        // Misaligned tokenisation: take the next IPA group for this unknown word
+        // instead of dropping it (the old `continue;` is what skipped words).
+        if (gi < groups.size()) {
+            const std::string wl = wordLangTag(words[i], langTag);
+            for (const std::string& p : ipaGroupToPhonemes(groups[gi]))
+                out.push_back(wl + ":" + p);
+            ++gi;
+        } else {
+            std::cerr << "[grain] unknown word without IPA group: " << words[i] << std::endl;
+        }
+    }
+    if (!aligned) {
+        // groups the word loop did not need (the phonemizer split one word into
+        // several groups) — append them so no phoneme is lost
+        for (; gi < groups.size(); ++gi) {
+            for (const std::string& p : ipaGroupToPhonemes(groups[gi]))
+                out.push_back(langTag + ":" + p);
+        }
     }
 
     std::string joined;
