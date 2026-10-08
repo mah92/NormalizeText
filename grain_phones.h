@@ -22,6 +22,7 @@
 #ifndef GRAIN_PHONES_H
 #define GRAIN_PHONES_H
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,15 @@ namespace grain {
 std::vector<std::string> ipaGroupToPhonemes(const std::string& group);
 
 // Normalized text + its IPA -> model-format phone string, e.g. "fa:s fa:a fa:l fa:ˈɑ fa:m".
+// ADR-049: map espeak-only phones onto the symbols the model actually carries.
+// The mapping used to live in the engine (grainspeech_infer.cpp); it belongs to the front-end, so
+// the tagged stream this library returns is already inside the model's alphabet.
+// `knownTokens` holds the symbol-table entries exactly as symbols.txt lists them (leading '@'
+// included, e.g. "@en:aɪ"); unknown phones are mapped onto the nearest carried symbol and anything
+// still unknown is returned unchanged (the engine counts and skips it, as before).
+std::vector<std::string> mapPhonesToInventory(const std::vector<std::string>& phones,
+                                             const std::set<std::string>& knownTokens);
+
 std::string toModelPhones(const std::string& normalized, const std::string& ipa,
                           const std::string& langTag);
 

@@ -15,6 +15,7 @@ struct NormalizeConfig {
     std::string hazm_verbs;             // verbs.dat for Persian processing
     std::string hazm_stopwords;         // stopwords.dat for Persian processing
     std::string homograph_data;         // homograph_data.json for Persian homograph
+    std::string symbols_file;           // model symbol table; when set, tagged phones are mapped into it
 };
 
 // Original signature (kept for backward compatibility, uses default paths)
@@ -25,5 +26,16 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
 void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
     std::string &normalizedString, std::string &ipaString,
     const NormalizeConfig& config);
+
+// ADR-048: the GrainSpeech phone stream with a language tag PER SEGMENT.
+//
+// Same shape as the training-data tool (`NormalizeCSV --grain`): the detector splits the text, every
+// segment keeps its own language, the espeak voice follows that language (Persian/Arabic/unknown ->
+// "fa", English -> "en-us"), and each segment's phones are tagged with its own language by
+// grain::toModelPhones (e.g. "fa:sˈalɑm en:tˈɛst"). Additive: normalizeString() above is unchanged.
+bool normalizeToTaggedPhones(const Language mainlang, const std::string& input,
+                             const NormalizeConfig& config, std::string& taggedPhones,
+                             std::string* ipaOut = nullptr,
+                             std::string* normalizedOut = nullptr);
 
 #endif // NORMALIZE_H
