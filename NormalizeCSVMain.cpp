@@ -1,7 +1,6 @@
 #include "normalize.h"
 #include "language_detector.h"
 #include "vits2-tokenizer/vits2-tokenizer.h"
-#include "grain_phones.h"
 
 #include <iostream>
 #include <fstream>
@@ -19,21 +18,25 @@ void removeAllSpaces(std::string& str);
 static std::string join(const std::vector<std::string>& vec, char delimiter);
 
 int main(int argc, char* argv[]) {
-    // Optional: --grain also writes <input>-grain.csv with the phone stream in the
-    // 16 kHz GrainSpeech model's format (see grain_phones.h).
+    // Optional: --grain also writes <input>-grain.csv with the tagged phone stream the
+    // 16 kHz GrainSpeech model consumes. --symbols <file> additionally maps the phones onto a
+    // model symbol table (the app passes its symbols file); without it the raw stream is written.
     bool grainFlag = false;
+    std::string symbolsFile;
     std::vector<std::string> positional;
     for (int i = 1; i < argc; ++i) {
         std::string arg(argv[i]);
         if (arg == "--grain" || arg == "-g") {
             grainFlag = true;
+        } else if (arg == "--symbols" && i + 1 < argc) {
+            symbolsFile = argv[++i];
         } else {
             positional.push_back(arg);
         }
     }
     if (positional.size() != 2) {
         std::cerr << "Usage: " << argv[0]
-                  << " <main_language: EN, FA, AR> <input_file> [--grain]\n";
+                  << " <main_language: EN, FA, AR> <input_file> [--grain] [--symbols <model-symbols-file>]\n";
         return 1;
     }
     argc = static_cast<int>(positional.size()) + 1;
@@ -73,20 +76,25 @@ int main(int argc, char* argv[]) {
     std::ofstream ipaCsvOutput(ipaCsvOutputFile);
     std::ofstream normalizedTxtOutput(normalizedTxtOutputFile);
 
-    // Optional GrainSpeech-format output (see grain_phones.h)
+    // Optional GrainSpeech-format output: one path only (ADR-050). The tagged phone stream comes
+    // from normalizeToTaggedPhones — the SAME API the app's engine calls — so per-word language
+    // tags and the CSV's IPA/normalized columns can never diverge, and the pipeline runs once per
+    // line instead of twice.
     std::ofstream grainCsvOutput;
-    std::string grainLangTag = "fa";
     const bool grainEnabled = grainFlag;
+    NormalizeConfig grainConfig = defaultNormalizeConfig();
+    grainConfig.symbols_file = symbolsFile;   // empty -> raw phones (no inventory mapping)
+    std::string grainPhones;
     if (grainEnabled) {
         grainCsvOutput.open(grainCsvOutputFile);
         if (!grainCsvOutput.is_open()) {
             std::cerr << "Error opening CSV output file: " << grainCsvOutputFile << "\n";
             return 1;
         }
-        const std::string ml = mainLanguage;
-        grainLangTag = (ml == "EN" || ml == "en") ? "en" : "fa";
         std::cout << "GrainSpeech phone output enabled: " << grainCsvOutputFile
-                  << " (IPA stream, tag " << grainLangTag << ")\n";
+                  << " (per-word language tags"
+                  << (symbolsFile.empty() ? ", no inventory mapping)" : ", mapped to " + symbolsFile + ")")
+                  << "\n";
     }
     
     if (!completeCsvOutput.is_open()) {
@@ -166,8 +174,14 @@ int main(int argc, char* argv[]) {
             textToNormalize += fields[i];
         }
 
-        //normalize
-        normalizeString(mainlang, ipa_mode, textToNormalize, normalizedString, ipaString);
+        // normalize — ONE path: with --grain the tagged phone stream is produced by the same call
+        // (per-word language tags), and the IPA/normalized columns come from it too.
+        if (grainEnabled) {
+            normalizeToTaggedPhones(mainlang, textToNormalize, grainConfig, grainPhones,
+                                    &ipaString, &normalizedString);
+        } else {
+            normalizeString(mainlang, ipa_mode, textToNormalize, normalizedString, ipaString);
+        }
         
         //if(ipa_mode)
         //    idVector = string_to_id_vector(ipaString);
@@ -200,15 +214,8 @@ int main(int argc, char* argv[]) {
         //ipaColumns.push_back(speakerID);
         ipaColumns.push_back(ipaString);
         
-        // Optional: model-format phone stream (word-level lexicon + IPA fallback)
+        // Optional: model-format phone stream, produced above by the single normalize call
         if (grainEnabled) {
-            std::string grainPhones;
-            try {
-                grainPhones = grain::toModelPhones(normalizedString, ipaString, grainLangTag);
-            } catch (const std::exception& e) {
-                std::cerr << "grain phone conversion failed for " << originalFileName << ": "
-                          << e.what() << "\n";
-            }
             std::vector<std::string> grainColumns;
             grainColumns.push_back(filePath);
             grainColumns.push_back(grainPhones);

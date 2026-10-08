@@ -38,4 +38,9 @@ bool normalizeToTaggedPhones(const Language mainlang, const std::string& input,
                              std::string* ipaOut = nullptr,
                              std::string* normalizedOut = nullptr);
 
+// The asset paths the pipeline needs (shakkelha / ezafe / hazm / homograph). Single source of
+// the defaults, so a caller that builds its own NormalizeConfig for normalizeToTaggedPhones
+// cannot silently lose ezafe or homograph disambiguation by leaving the paths empty.
+NormalizeConfig defaultNormalizeConfig();
+
 #endif // NORMALIZE_H

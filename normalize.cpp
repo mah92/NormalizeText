@@ -122,12 +122,13 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
 
 }  // namespace
 
-// Original signature — wraps the config-based version with default paths
-void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
-     std::string &normalizedString, std::string &ipaString)
+// The asset paths every normalisation needs. One source of truth: the wrappers below and any
+// caller of normalizeToTaggedPhones use it, so ezafe / homograph / shakkelha can never be lost
+// by an empty path in a hand-built config.
+NormalizeConfig defaultNormalizeConfig()
 {
     NormalizeConfig config;
-    config.espeak_data_path = "";         // empty -> use default
+    config.espeak_data_path = "";          // empty -> use the built-in default
     config.shakkelha_onnx = "./assets/shakkelha.onnx";
     config.ezafe_model_onnx = "./assets/ezafe_model.onnx";
     config.ezafe_model_spiece = "./assets/ezafe_spiece.model";
@@ -135,7 +136,15 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
     config.hazm_verbs = "./assets/hazm_verbs.dat";
     config.hazm_stopwords = "./assets/hazm_stopwords.dat";
     config.homograph_data = "./assets/homograph_data.json";
-    normalizeString(mainlang, ipa_mode, input, normalizedString, ipaString, config);
+    return config;
+}
+
+// Original signature — wraps the config-based version with default paths
+void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
+     std::string &normalizedString, std::string &ipaString)
+{
+    normalizeString(mainlang, ipa_mode, input, normalizedString, ipaString,
+                    defaultNormalizeConfig());
 }
 
 // Config-based version — behaviour unchanged (segment order, IPA concatenation, [NORM] timing line).
