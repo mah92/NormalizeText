@@ -19,6 +19,62 @@
 
 namespace {
 
+// Thousands separators inside a number ("12,345", "۱۲٬۳۴۵") are not understood by the phonemizer:
+// it read them as two numbers plus a spoken comma («دوازده ویرگول سیصد و چهل و پنج») and lost
+// «هزار». Only a grouping separator (a digit before it and exactly three digits after) is removed,
+// so commas in prose and the Persian decimal separator ٫ are left alone.
+bool isDigitCp(char32_t c) {
+    return (c >= U'0' && c <= U'9') || (c >= 0x0660 && c <= 0x0669) || (c >= 0x06F0 && c <= 0x06F9);
+}
+
+std::string joinDigitGroupSeparators(const std::string& in) {
+    std::vector<char32_t> cp;
+    for (size_t i = 0; i < in.size();) {
+        unsigned char b = static_cast<unsigned char>(in[i]);
+        char32_t v;
+        size_t n;
+        if (b < 0x80) { v = b; n = 1; }
+        else if ((b >> 5) == 0x6) { v = b & 0x1F; n = 2; }
+        else if ((b >> 4) == 0xE) { v = b & 0x0F; n = 3; }
+        else { v = b & 0x07; n = 4; }
+        for (size_t k = 1; k < n && i + k < in.size(); ++k) {
+            v = (v << 6) | (static_cast<unsigned char>(in[i + k]) & 0x3F);
+        }
+        cp.push_back(v);
+        i += n;
+    }
+    std::vector<char32_t> out;
+    for (size_t i = 0; i < cp.size(); ++i) {
+        char32_t c = cp[i];
+        if (c == U',' || c == 0x066C) {                 // ASCII comma or Arabic thousands separator
+            int after = 0;
+            for (size_t j = i + 1; j < cp.size() && isDigitCp(cp[j]); ++j) ++after;
+            bool before = !out.empty() && isDigitCp(out.back());
+            if (before && after == 3) continue;         // drop it: same number, just grouped
+        }
+        out.push_back(c);
+    }
+    std::string res;
+    for (char32_t c : out) {
+        if (c < 0x80) {
+            res.push_back(static_cast<char>(c));
+        } else if (c < 0x800) {
+            res.push_back(static_cast<char>(0xC0 | (c >> 6)));
+            res.push_back(static_cast<char>(0x80 | (c & 0x3F)));
+        } else if (c < 0x10000) {
+            res.push_back(static_cast<char>(0xE0 | (c >> 12)));
+            res.push_back(static_cast<char>(0x80 | ((c >> 6) & 0x3F)));
+            res.push_back(static_cast<char>(0x80 | (c & 0x3F)));
+        } else {
+            res.push_back(static_cast<char>(0xF0 | (c >> 18)));
+            res.push_back(static_cast<char>(0x80 | ((c >> 12) & 0x3F)));
+            res.push_back(static_cast<char>(0x80 | ((c >> 6) & 0x3F)));
+            res.push_back(static_cast<char>(0x80 | (c & 0x3F)));
+        }
+    }
+    return res;
+}
+
 bool persianResourcesInitialized = false;
 
 // ---------------------------------------------------------------------------
@@ -53,6 +109,7 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
 
     auto t0 = clock::now();
     normalized = performGeneralReplacements(mainlang, input);
+    normalized = joinDigitGroupSeparators(normalized);
     LanguageDetector detector(mainlang);
     std::vector<DetectedSegment> text_segments = detector.detect_segments(normalized);
     auto t1 = clock::now();
