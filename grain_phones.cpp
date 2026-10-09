@@ -168,6 +168,59 @@ std::vector<std::string> ipaGroupToPhonemes(const std::string& group) {
 }
 
 // ---------------------------------------------------------------------------
+// English diphthong merging — part of the front-end itself (Ali, 2026-10-08): espeak splits some
+// English diphthongs into two symbols ("dˈeɪɾə" -> "ˈe" + "ɪ"), while the English training labels
+// (the author's ARPAbet->IPA alignments) carry them as ONE token ("ˈeɪ"). Only the measured pairs
+// are merged, and only English segments are affected: Persian has no diphthong inventory in the
+// model's alphabet, so a bare merge there could mint a token the alphabet does not carry.
+// ---------------------------------------------------------------------------
+void mergeEnglishDiphthongs(std::vector<std::string>& tokens) {
+    static const struct { const char* first; const char* second; const char* joined; } kPairs[] = {
+        {"a", "\xC9\xAA", "a\xC9\xAA"},     // a + ɪ -> aɪ
+        {"e", "\xC9\xAA", "e\xC9\xAA"},     // e + ɪ -> eɪ
+        {"o", "\xCA\x8A", "o\xCA\x8A"},     // o + ʊ -> oʊ
+        {"a", "\xCA\x8A", "a\xCA\x8A"},     // a + ʊ -> aʊ
+        {"\xC9\x94", "\xC9\xAA", "\xC9\x94\xC9\xAA"},   // ɔ + ɪ -> ɔɪ
+        {"\xCA\x8C", "\xC9\xAA", "a\xC9\xAA"},          // ʌ + ɪ -> aɪ
+    };
+    auto split_stress = [](const std::string& tok, std::string& stress, std::string& rest) {
+        stress.clear();
+        rest = tok;
+        for (;;) {
+            if (rest.size() >= 2 && static_cast<unsigned char>(rest[0]) == 0xCB
+                && (static_cast<unsigned char>(rest[1]) == 0x88
+                    || static_cast<unsigned char>(rest[1]) == 0x8C)) {
+                stress += rest.substr(0, 2);
+                rest.erase(0, 2);
+            } else {
+                break;
+            }
+        }
+    };
+    std::vector<std::string> out;
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        bool merged = false;
+        if (i + 1 < tokens.size()) {
+            std::string s1, c1, s2, c2;
+            split_stress(tokens[i], s1, c1);
+            split_stress(tokens[i + 1], s2, c2);
+            if (s2.empty() || s2 == s1) {
+                for (const auto& pair : kPairs) {
+                    if (c1 == pair.first && c2 == pair.second) {
+                        out.push_back(s1 + pair.joined);   // stress stays on the merged token
+                        ++i;                               // consume the second half
+                        merged = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!merged) out.push_back(tokens[i]);
+    }
+    tokens.swap(out);
+}
+
+// ---------------------------------------------------------------------------
 std::vector<std::string> mapPhonesToInventory(
         const std::vector<std::string>& in,
         const std::set<std::string>& knownTokens) {
@@ -200,10 +253,6 @@ std::vector<std::string> mapPhonesToInventory(
         }
     };
 
-    const std::string V_A = "a", V_E = "e", V_O = "o", V_I = "i", V_U = "u";
-    const std::string V_OPEN_O = "\xC9\x94";        // ɔ
-    const std::string P_I = "\xC9\xAA";             // ɪ
-    const std::string P_U = "\xCA\x8A";             // ʊ
     const std::string P_SCHWA = "\xC9\x99";         // ə
     const std::string P_LEN = "\xCB\x90";           // ː
     const std::string S_PRIMARY = "\xCB\x88";       // ˈ
@@ -219,29 +268,18 @@ std::vector<std::string> mapPhonesToInventory(
         // 1) already a symbol the model knows
         if (has(in[i])) { out.push_back(in[i]); continue; }
 
-        // 2) an espeak-split diphthong: ("ˈa","ɪ") -> "ˈaɪ", ("ˌe","ɪ") -> "ˌeɪ"
-        bool is_vowel_letter = (rest == V_A || rest == V_E || rest == V_O
-                                || rest == V_I || rest == V_U || rest == V_OPEN_O);
-        if (is_vowel_letter && i + 1 < in.size()) {
-            std::string np, ncore;
-            split_prefix(in[i + 1], np, ncore);
-            std::string nstress, nrest;
-            split_stress(ncore, nstress, nrest);
-            if (np == prefix && (nstress.empty() || nstress == stress)
-                && (nrest == P_I || nrest == P_U)) {
-                std::string merged = prefix + stress + rest + nrest;
-                if (has(merged)) { out.push_back(merged); ++i; continue; }
-                std::string bare = prefix + rest + nrest;
-                if (has(bare)) { out.push_back(bare); ++i; continue; }
-            }
-        }
-
+        // 2) espeak's split English diphthongs are already merged in the core path
+        //    (mergeEnglishDiphthongs in toModelPhones), so nothing to do here — the merge belongs to
+        //    the front-end, not to this alphabet-fitting layer.
         // 3) near-miss substitutions (stress-preserving form first)
         static const char* kSubs[][2] = {
             {"\xE1\xB5\xBB", "\xC9\xAA"},                    // ᵻ  -> ɪ
             {"\xC9\xA8",     "\xC9\xAA"},                    // ɨ  -> ɪ
-            {"\xC9\xBE",     "\xC9\xB9"},                    // ɾ  -> ɹ
+            {"\xC9\xBE",     "t"},                            // ɾ  -> t  (the trained English labels write the
+                                                              //          American flap as t: data/better/water)
             {"r",            "\xC9\xB9"},                    // r  -> ɹ
+            {"i",            "\xC9\xAA"},                    // i  -> ɪ  (espeak's bare i; not in the alphabet)
+            {"o\xCB\x90",     "o\xCA\x8A"},                    // oː -> oʊ  (espeak's long o; not in the alphabet)
             {"\xC9\x90",     "\xC9\x99"},                    // ɐ  -> ə
             {"\xC9\x92",     "\xC9\x94"},                    // ɒ  -> ɔ
             {"\xCA\x8C",     "\xC9\x99"},                    // ʌ  -> ə
@@ -345,10 +383,13 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
     (void)normalized;
 
     std::vector<std::string> out;
+    const bool english = (langTag == "en" || langTag == "en-us" || langTag == "EN");
     for (const std::string& group : splitWhitespace(ipa)) {
         const std::string t = trimPunct(group);
         if (t.empty() || isJunkOnly(t)) continue;
-        for (const std::string& p : ipaGroupToPhonemes(t))
+        std::vector<std::string> toks = ipaGroupToPhonemes(t);
+        if (english) mergeEnglishDiphthongs(toks);   // front-end rule, independent of any alphabet
+        for (const std::string& p : toks)
             out.push_back(langTag + ":" + p);
     }
 
