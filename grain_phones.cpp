@@ -174,7 +174,17 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
             while (ss >> tok) out.push_back(tok);
             continue;
         }
-        if (!aligned) continue;                     // unknown word, no group to fall back on
+        // A lone letter is phonemised into several IPA groups (e.g. ح ->
+        // "hˈe jˈe dʒˈimi"), so word/group counts never match.  Emit the
+        // whole group sequence for that single word.
+        if (!aligned) {
+            if (words.size() == 1 && !groups.empty()) {
+                for (const std::string& g : groups)
+                    for (const std::string& p : ipaGroupToPhonemes(g))
+                        out.push_back(langTag + ":" + p);
+            }
+            continue;
+        }
         for (const std::string& p : ipaGroupToPhonemes(groups[i]))
             out.push_back(langTag + ":" + p);
     }
