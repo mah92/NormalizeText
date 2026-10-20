@@ -167,6 +167,23 @@ void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_
     }
 }
 
+// simple-app (Ali 2026-10-15): a lone letter (a whitespace-delimited token that is exactly that one
+// letter) is replaced by its spoken name; words that merely CONTAIN the letter are untouched.
+void applyPersianLetterNames(std::string& text, const std::unordered_map<std::string, std::string>& names) {
+    std::string out;
+    size_t i = 0;
+    while (i < text.size()) {
+        if (text[i] == ' ' || text[i] == '\t' || text[i] == '\n') { out += text[i++]; continue; }
+        size_t j = text.find_first_of(" \t\n", i);
+        if (j == std::string::npos) j = text.size();
+        const std::string token = text.substr(i, j - i);
+        auto it = names.find(token);
+        out += (it != names.end()) ? it->second : token;
+        i = j;
+    }
+    text = out;
+}
+
 bool is_cjk(uint32_t cp) {
     return (cp >= 0x4E00 && cp <= 0x9FFF);
 }
