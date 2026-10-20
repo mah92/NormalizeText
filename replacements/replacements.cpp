@@ -67,6 +67,18 @@ std::string performGeneralReplacements(Language mainlang, const std::string& inp
         case Language::PERSIAN:
         // 🔑 -> کلید
         applyNormalReplacementsWithSpace(result, PERSIAN_SYMBOL_REPLACEMENTS);
+        // simple-app (Ali 2026-10-15): a letter standing ALONE is read by name
+        // («ی» -> «یاء»).  Only when the whole input is that single token: inside
+        // a sentence «و» is the conjunction "va", not the letter name "vāv".
+        {
+            size_t a = result.find_first_not_of(" \t\r\n");
+            if (a != std::string::npos) {
+                size_t b = result.find_last_not_of(" \t\r\n");
+                std::string token = result.substr(a, b - a + 1);
+                if (token.find_first_of(" \t\r\n") == std::string::npos)
+                    applyPersianLetterNames(result, PERSIAN_LETTER_NAMES);
+            }
+        }
         break;
 
         default:
