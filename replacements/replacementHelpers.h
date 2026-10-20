@@ -17,6 +17,8 @@ void applyWholeWordReplacements(std::string& result, const std::unordered_map<st
 void applyWholeWordReplacementsArabic(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacements(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
 void applyNormalReplacementsWithSpace(std::string& result, const std::unordered_map<std::string, std::string>& replacements);
+// simple-app: replace a token that is exactly one letter with that letter's spoken name
+void applyPersianLetterNames(std::string& text, const std::unordered_map<std::string, std::string>& names);
 void doArabicSpecificReplacements(std::string &segment_text);
 void applyBitByteReplacements(std::string &result);
 void seperateCapitalAbbreviations(std::string &result);

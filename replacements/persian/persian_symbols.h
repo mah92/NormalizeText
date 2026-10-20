@@ -4,6 +4,30 @@
 #include <unordered_map> 
 #include <string> 
 
+// simple-app branch (Ali 2026-10-15): a letter standing ALONE is read by its name. This must be
+// applied token-wise (applyPersianLetterNames) — the symbol map below is a plain substring pass and
+// would rewrite every word that merely contains the letter.
+static const std::unordered_map<std::string, std::string> PERSIAN_LETTER_NAMES = {
+  {"\u062B", "سه یِ سه نقطه"},   // ث
+  {"\u0635", "صاد"},          // ص
+  {"\u0647", "هِ یِ دو چِشم"},     // ه
+  {"\u06AF", "گّاف"},
+  {"\u062A", "تِِ یِ دو نقطه"},   // ت
+  {"\u0633", "سه یِ سه دندونه"},  // س
+  {"\u0637", "طِ یِ دسته دار"},    // ط
+  {"\u0638", "ظِ یِ دسته دار"},   // ظ
+  {"\u062D", "ه جیمی"},     // ح
+  {"\u062E", "خاء"},        // خ
+  {"\u0632", "زِ یِ رِئی"},     // ز        // گ  (Ali 2026-10-15: with a shadda the model renders the g clearly)
+  {"\u067E", "پِِ"},          // پ
+  {"\u062A", "تِِ"},          // ت
+  {"\u0628", "باء"},          // ب
+  {"\u06CC", "یاء"},          // ی
+  {"\u0648", "واو"},           // و
+  {"\u0631", "راء"},          // ر
+  {"\u0636", "ضاد"},          // ض
+};
+
 static const std::unordered_map<std::string, std::string> PERSIAN_SYMBOL_REPLACEMENTS = {
   {"$", "دلار"},
   {"¢", "سنت"},
