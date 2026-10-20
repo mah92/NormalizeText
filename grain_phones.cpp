@@ -148,6 +148,8 @@ std::vector<std::string> ipaGroupToPhonemes(const std::string& group) {
     std::vector<std::string> out;
     for (const std::string& t : tokens)
         if (!isJunkOnly(t)) out.push_back(t);
+    // NOTE: affricates stay TWO phones (t + ʃ / d + ʒ): the 22 kHz model is trained on
+    // split tokens, so the stream must match training.
     return out;
 }
 
@@ -189,31 +191,31 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
             out.push_back(langTag + ":" + p);
     }
 
-    // NOTE: affricates stay TWO phones (d + ʒ / t + ʃ). The 22 kHz acoustic model is
-    // trained on MFA character-level alignments that split them, so merging here would
-    // make inference disagree with training. The human-readable table keeps its own
-    // merged notation; this stream is the model's input.
-
-    // Split affricates into their two phones (espeak hands back "tʃ"/"dʒ" as one unit).
-    // The 22 kHz acoustic model is aligned on character-level MFA phones, so the stream
-    // fed to it must be t + ʃ / d + ʒ; otherwise the model meets a symbol it never saw.
+    // Affricates: the inventory carries them as ONE symbol (@fa:dʒ, @fa:tʃ) but
+    // both espeak and the pre-built lexicon can hand us "d" + "ʒ" / "t" + "ʃ".
+    // Merge the pair (same language tag) so the stream matches the symbol table.
     {
-        std::vector<std::string> split;
-        for (const std::string& tok : out) {
-            const size_t c = tok.find(':');
-            const std::string tag = c == std::string::npos ? "" : tok.substr(0, c + 1);
-            const std::string body = c == std::string::npos ? tok : tok.substr(c + 1);
-            if (body.find("t\u0283") == 0) {
-                split.push_back(tag + "t");
-                split.push_back(tag + body.substr(1));
-            } else if (body.find("d\u0292") == 0) {
-                split.push_back(tag + "d");
-                split.push_back(tag + body.substr(1));
-            } else {
-                split.push_back(tok);
+        std::vector<std::string> merged;
+        for (size_t i = 0; i < out.size(); ++i) {
+            const std::string& cur = out[i];
+            if (i + 1 < out.size()) {
+                const std::string& nxt = out[i + 1];
+                const size_t c = cur.find(':');
+                const size_t n = nxt.find(':');
+                if (c != std::string::npos && n != std::string::npos &&
+                    cur.substr(0, c) == nxt.substr(0, n)) {
+                    const std::string tag = cur.substr(0, c + 1);
+                    const std::string a = cur.substr(c + 1), b = nxt.substr(n + 1);
+                    if ((a == "d" && b == "ʒ") || (a == "t" && b == "ʃ")) {
+                        merged.push_back(tag + a + b);
+                        ++i;
+                        continue;
+                    }
+                }
             }
+            merged.push_back(cur);
         }
-        out.swap(split);
+        out.swap(merged);
     }
 
     std::string joined;

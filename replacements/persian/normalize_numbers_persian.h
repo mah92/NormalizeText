@@ -103,7 +103,7 @@ inline std::vector<std::string> split_into_groups(const std::string& s, int grou
 inline std::string group_to_words(int num) {
     static const std::vector<std::string> units = {
         "", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نُه",
-        "ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده",
+        "دَه", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده",
         "هفده", "هجده", "نوزده"
     };
     
@@ -281,13 +281,6 @@ inline std::string process_token(const std::string& token) {
     NormalizedNumber normalized = normalize(token);
     if (!normalized.is_valid) {
         return token;
-    }
-
-    // simple-app branch (Ali 2026-10-15): a lone «۲» — the number two on its own — is spoken
-    // «دُوح». «دو» on its own came out of the model as an 80 ms click and was not heard; the longer
-    // spelling is read clearly. Only the standalone number is affected (not ۱۲۳۴, not the pairs).
-    if (normalized.fractional_part.empty() && normalized.integer_part == "2") {
-        return "دُوح";
     }
 
     // --- Ali's policy (simple-app) -----------------------------------------------------------
@@ -484,7 +477,7 @@ inline void run_tests() {
         {"0", "صفر", false},
         {"5", "پنج", false},
         {"12", "دوازده", false},
-        {"2", "دُوح", false}, // simple-app: a lone ۲ is read «دُوح»
+        {"2", "دو", false},
         {"123", "صدُ بیستُ سه", false},
         {"1200", "هِزارُ دویست", false},
         {"9", "نُه", false},
