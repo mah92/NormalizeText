@@ -1,4 +1,5 @@
 #include "ezafe_detector.hpp"
+#include <set>
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
@@ -17,6 +18,37 @@ EzafeDetector::EzafeDetector(const std::string& onnx_path,
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
     session_ = std::make_unique<Ort::Session>(env_, onnx_path.c_str(), session_options);
 }
+
+namespace {
+// Numeral words never take the ezafe themselves: "0 1 2" must read as "sefr yek do",
+// not "sefr-e yek-e do". The detector is a language model and happily predicts an ezafe
+// after a bare number, so the decision is overridden here.
+bool isNumeralToken(const std::string& w) {
+    static const char* kPersianDigits[] = {"۰","۱","۲","۳","۴","۵","۶","۷","۸","۹"};
+    static const char* kArabicDigits[]  = {"٠","١","٢","٣","٤","٥","٦","٧","٨","٩"};
+    if (w.empty()) return false;
+    bool allDigits = true;
+    size_t pos = 0;
+    while (pos < w.size()) {
+        bool hit = false;
+        for (const char* d : kPersianDigits)
+            if (w.compare(pos, std::string(d).size(), d) == 0) { pos += std::string(d).size(); hit = true; break; }
+        if (!hit)
+            for (const char* d : kArabicDigits)
+                if (w.compare(pos, std::string(d).size(), d) == 0) { pos += std::string(d).size(); hit = true; break; }
+        if (!hit) { allDigits = false; break; }
+    }
+    if (allDigits) return true;
+    if (w.find_first_not_of("0123456789") == std::string::npos) return true;
+
+    static const std::set<std::string> kWords = {
+        "صفر","یک","دو","سه","چهار","پنج","شش","هفت","هشت","نه","ده",
+        "یازده","دوازده","سیزده","چهارده","پانزده","شانزده","هفده","هجده","نوزده",
+        "بیست","سی","چهل","پنجاه","شصت","هفتاد","هشتاد","نود","صد","دویست","سیصد",
+        "چهارصد","پانصد","ششصد","هفتصد","هشتصد","نهصد","هزار","میلیون","میلیارد","تریلیون"};
+    return kWords.count(w) > 0;
+}
+}  // namespace
 
 std::vector<EzafeDetector::Result> EzafeDetector::predict(
     const std::vector<std::string>& words)
@@ -111,7 +143,7 @@ std::vector<EzafeDetector::Result> EzafeDetector::predict(
         float sum = e0 + e1;
         float p_ezafe = e1 / sum;
 
-        results[wi].needs_ezafe = (p_ezafe >= 0.5f);
+        results[wi].needs_ezafe = (p_ezafe >= 0.5f) && !isNumeralToken(words[wi]);
         results[wi].confidence = p_ezafe;
     }
 

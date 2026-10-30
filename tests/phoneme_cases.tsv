@@ -1,0 +1,69 @@
+# lang	input	expected phones
+# Regenerate: python3 tools/gen_phoneme_cases.py
+FA	ا	fa:ˈa fa:l fa:e fa:f
+FA	ب	fa:b fa:ˈɑ fa:ʔ
+FA	پ	fa:p fa:ˈe
+FA	ت	fa:t fa:ˈe fa:j fa:ˈe fa:d fa:ˈo fa:n fa:ˈo fa:q fa:t fa:eː
+FA	ث	fa:s fa:ˈeː fa:j fa:ˈe fa:s fa:ˈeː fa:n fa:ˈo fa:q fa:t fa:eː
+FA	ج	fa:d fa:ʒ fa:ˈi fa:m
+FA	چ	fa:t fa:ʃ fa:ˈeː
+FA	ح	fa:h fa:ˈe fa:j fa:ˈe fa:d fa:ʒ fa:ˈi fa:m fa:i
+FA	خ	fa:x fa:ˈɑ fa:ʔ
+FA	د	fa:d fa:ˈɑ fa:l
+FA	ذ	fa:z fa:ˈɑ fa:l
+FA	ر	fa:r fa:ˈɑ fa:ʔ
+FA	ز	fa:z fa:ˈe fa:j fa:ˈe fa:r fa:ˈe fa:ʔ fa:i
+FA	ژ	fa:ʒ fa:ˈeː
+FA	س	fa:s fa:ˈeː fa:j fa:ˈe fa:s fa:ˈeː fa:d fa:a fa:n fa:d fa:ˈuː fa:n fa:eː
+FA	ش	fa:ʃ fa:ˈi fa:n
+FA	ص	fa:s fa:ˈɑ fa:d
+FA	ض	fa:z fa:ˈɑ fa:d
+FA	ط	fa:t fa:ˈe fa:j fa:ˈe fa:d fa:ˈa fa:s fa:t fa:eː fa:d fa:ˈɑ fa:r
+FA	ظ	fa:z fa:ˈe fa:j fa:ˈe fa:d fa:ˈa fa:s fa:t fa:eː fa:d fa:ˈɑ fa:r
+FA	ع	fa:ˈe fa:j fa:n
+FA	غ	fa:q fa:ˈe fa:j fa:n
+FA	ف	fa:f fa:ˈeː
+FA	ق	fa:q fa:ˈɑ fa:f
+FA	ک	fa:k fa:ˈɑ fa:f
+FA	گ	fa:ɡ fa:ˈɑ fa:f
+FA	ل	fa:l fa:ˈɑ fa:m
+FA	م	fa:m fa:ˈi fa:m
+FA	ن	fa:n fa:ˈu fa:n
+FA	و	fa:v fa:ˈɑ fa:v
+FA	ه	fa:h fa:ˈe fa:j fa:ˈe fa:d fa:ˈo fa:t fa:ʃ fa:ˈe fa:ʃ fa:m
+FA	ی	fa:j fa:ˈɑ fa:ʔ
+EN	letter_a	en:ˈeɪ
+EN	letter_b	en:b en:ˈiː
+EN	letter_c	en:s en:ˈiː
+EN	letter_d	en:d en:ˈiː
+EN	letter_e	en:ˈiː
+EN	letter_f	en:ˈɛ en:f
+EN	letter_g	en:d en:ʒ en:ˈiː
+EN	letter_h	en:ˈeɪ en:t en:ʃ
+EN	letter_i	en:ˈaɪ
+EN	letter_j	en:d en:ʒ en:ˈeɪ
+EN	letter_k	en:k en:ˈeɪ
+EN	letter_l	en:ˈɛ en:l
+EN	letter_m	en:ˈɛ en:m
+EN	letter_n	en:ˈɛ en:n
+EN	letter_o	en:ˈoʊ
+EN	letter_p	en:p en:ˈiː
+EN	letter_q	en:k en:j en:ˈuː
+EN	letter_r	en:ˈɑ en:ɹ
+EN	letter_s	en:ˈɛ en:s
+EN	letter_t	en:t en:ˈiː
+EN	letter_u	en:j en:ˈuː
+EN	letter_v	en:v en:ˈiː
+EN	letter_w	en:d en:ˈʌ en:b en:ə en:l en:j en:ˈuː
+EN	letter_x	en:ˈɛ en:k en:s
+EN	letter_y	en:w en:ˈaɪ
+EN	letter_z	en:z en:ˈiː
+FA	0	fa:s fa:ˈe fa:f fa:r
+FA	7	fa:h fa:ˈa fa:f fa:t
+FA	12	fa:d fa:ˈa fa:v fa:ɑ fa:z fa:d fa:ˌa fa:h
+FA	123	fa:s fa:ˈa fa:d fa:o fa:b fa:ˈi fa:s fa:t fa:o fa:s fa:ˈeː
+FA	1404	fa:h fa:e fa:z fa:ˈɑ fa:r fa:o fa:t fa:ʃ fa:ˌɑ fa:h fa:ɑ fa:r fa:s fa:ˈa fa:d fa:o fa:t fa:ʃ fa:ˈɑ fa:h fa:ɑ fa:r
+FA	الف	fa:ˈa fa:l fa:e fa:f
+FA	و گل	fa:v fa:ˈa fa:ɡ fa:ˈo fa:l
+FA	و	fa:v fa:ˈɑ fa:v
+FA	ی	fa:j fa:ˈɑ fa:ʔ

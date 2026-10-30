@@ -174,9 +174,46 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
             while (ss >> tok) out.push_back(tok);
             continue;
         }
-        if (!aligned) continue;                     // unknown word, no group to fall back on
+        // A lone letter is phonemised into several IPA groups (e.g. ح ->
+        // "hˈe jˈe dʒˈimi"), so word/group counts never match.  Emit the
+        // whole group sequence for that single word.
+        if (!aligned) {
+            if (words.size() == 1 && !groups.empty()) {
+                for (const std::string& g : groups)
+                    for (const std::string& p : ipaGroupToPhonemes(g))
+                        out.push_back(langTag + ":" + p);
+            }
+            continue;
+        }
         for (const std::string& p : ipaGroupToPhonemes(groups[i]))
             out.push_back(langTag + ":" + p);
+    }
+
+    // NOTE: affricates stay TWO phones (d + ʒ / t + ʃ). The 22 kHz acoustic model is
+    // trained on MFA character-level alignments that split them, so merging here would
+    // make inference disagree with training. The human-readable table keeps its own
+    // merged notation; this stream is the model's input.
+
+    // Split affricates into their two phones (espeak hands back "tʃ"/"dʒ" as one unit).
+    // The 22 kHz acoustic model is aligned on character-level MFA phones, so the stream
+    // fed to it must be t + ʃ / d + ʒ; otherwise the model meets a symbol it never saw.
+    {
+        std::vector<std::string> split;
+        for (const std::string& tok : out) {
+            const size_t c = tok.find(':');
+            const std::string tag = c == std::string::npos ? "" : tok.substr(0, c + 1);
+            const std::string body = c == std::string::npos ? tok : tok.substr(c + 1);
+            if (body.find("t\u0283") == 0) {
+                split.push_back(tag + "t");
+                split.push_back(tag + body.substr(1));
+            } else if (body.find("d\u0292") == 0) {
+                split.push_back(tag + "d");
+                split.push_back(tag + body.substr(1));
+            } else {
+                split.push_back(tok);
+            }
+        }
+        out.swap(split);
     }
 
     std::string joined;
