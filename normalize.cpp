@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <map>
 #include <cctype>
+#include <cstdlib>
 
 static bool persianResourcesInitialized = false;
 
@@ -83,6 +84,39 @@ static std::string enLetterLookup(const std::string& text) {
     return it == enLetterNames().end() ? "" : it->second;
 }
 
+// A run of single letters ("A B C", "R, E, D") is spelled letter by letter:
+// espeak turns "B" into "bait" and "A" into "ɐ" once the input is more than one
+// character, so every letter is answered from the table above instead.
+static std::string enLetterSequenceLookup(const std::string& text) {
+    std::string out;
+    std::string tok;
+    int count = 0;
+    auto flush = [&]() -> bool {
+        if (tok.empty()) return true;
+        std::string name;
+        if (tok.size() == 1) {
+            char c = static_cast<char>(std::toupper(static_cast<unsigned char>(tok[0])));
+            auto it = enLetterNames().find(c);
+            if (it != enLetterNames().end()) name = it->second;
+        }
+        tok.clear();
+        if (name.empty()) return false;
+        if (!out.empty()) out += " ";
+        out += name;
+        ++count;
+        return true;
+    };
+    for (char ch : text) {
+        if (ch == ' ' || ch == '\t' || ch == ',' || ch == '.' || ch == ';' || ch == '-') {
+            if (!flush()) return "";
+        } else {
+            tok += ch;
+        }
+    }
+    if (!flush()) return "";
+    return count >= 2 ? out : "";
+}
+
 // Original signature — wraps the config-based version with default paths
 void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
      std::string &normalizedString, std::string &ipaString) 
@@ -119,8 +153,9 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
             return;
         }
     }
-    if (mainlang == Language::ENGLISH) {
+    if (mainlang == Language::ENGLISH && std::getenv("NT_LEGACY_LETTERS") == nullptr) {
         std::string lone = enLetterLookup(input);
+        if (lone.empty()) lone = enLetterSequenceLookup(input);
         if (!lone.empty()) {
             normalizedString = input;
             if (ipa_mode) ipaString = lone;
