@@ -44,11 +44,13 @@ public:
     }
 
     static Language string_to_language(const std::string language) {
-        if(language == "AR")
+        std::string l = language;
+        for (auto &c : l) c = toupper((unsigned char)c);
+        if(l == "AR" || l == "ARABIC")
             return Language::ARABIC;
-        if(language == "EN")
+        if(l == "EN" || l == "ENGLISH")
             return Language::ENGLISH;
-        if(language == "FA")
+        if(l == "FA" || l == "PERSIAN")
             return Language::PERSIAN;
         return Language::ENGLISH;
     }
