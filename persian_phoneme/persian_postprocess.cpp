@@ -3,6 +3,8 @@
 #include "hazm/stopwords.hpp"
 
 #include <algorithm>
+#include <set>
+#include <string>
 #include <memory>
 #include <sstream>
 
@@ -156,6 +158,19 @@ std::string postprocessPersianIPA(
         if (i < ezafeResults.size()) {
             needsEzafe = ezafeResults[i].needs_ezafe &&
                          ezafeResults[i].confidence >= 0.7f;
+        }
+        // Numbers never take a kasre-ye ezafe: «۹ خالی» must be read "noh xāli",
+        // not "noh-e xāli" (the model otherwise hears "na").
+        if (needsEzafe) {
+            static const std::set<std::string> kNumberWords = {
+                "صفر", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نُه", "نه",
+                "ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده", "هفده",
+                "هجده", "نوزده", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد",
+                "نود", "صد", "یکصد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد",
+                "هفتصد", "هشتصد", "نهصد", "هزار", "میلیون", "میلیارد"};
+            std::string w = cleanWord;
+            while (!w.empty() && (w.back() == '\u200c')) w.pop_back();
+            if (kNumberWords.count(w)) needsEzafe = false;
         }
         // A real ezafe is never followed by a preposition/particle; without this guard the
         // detector fires on phrases like «دانش‌آموزان در کلاس» and we hear «dāneshāmuzān-e dar».

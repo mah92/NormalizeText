@@ -10,6 +10,12 @@ namespace {
 
 // Same rule sets as phonemize_ipa.py — keep in sync.
 const std::set<std::string> kStress = {"ˈ", "ˌ"};
+// IPA vowels (base glyphs) — stress must land on the next VOWEL, never on a consonant:
+// a stress marker glued to a consonant (e.g. "ˈj" in ruˈjeː) produces a phone the model
+// has never seen.
+const std::set<std::string> kVowel = {
+    "a", "e", "i", "o", "u", "ɑ", "ɪ", "ʊ", "ə", "ɛ", "ɔ", "æ", "ɐ", "ʌ",
+    "ɜ", "ɚ", "ᵻ", "y", "ø", "œ", "ɨ", "ʉ", "ɯ", "ɤ", "ɒ", "ɘ", "ɵ"};
 const std::set<std::string> kLength = {"ː", "ˑ"};
 const std::set<std::string> kTie = {"͡", "͜"};
 const std::set<std::string> kDiacritics = {
@@ -108,16 +114,25 @@ std::vector<std::string> ipaGroupToPhonemes(const std::string& group) {
             continue;
         }
         if (inSet(kStress, ch)) {
-            // stress attaches to the following vowel
-            std::string tok = ch;
-            ++i;
-            while (i < cps.size() && inSet(kStress, cps[i])) tok += cps[i++];
-            if (i < cps.size()) {
-                tok += cps[i++];
+            // stress attaches to the following VOWEL; any consonants sitting between the
+            // marker and that vowel are emitted first as their own tokens.
+            std::string stress;
+            while (i < cps.size() && inSet(kStress, cps[i])) stress += cps[i++];
+            while (i < cps.size() && !inSet(kVowel, cps[i])) {
+                const std::string& c = cps[i];
+                if (inSet(kTie, c)) { ++i; continue; }
+                std::string tok = c;
+                ++i;
                 while (i < cps.size() && (inSet(kLength, cps[i]) || inSet(kDiacritics, cps[i])))
                     tok += cps[i++];
+                tokens.push_back(tok);
             }
-            tokens.push_back(tok);
+            if (i < cps.size()) {
+                std::string tok = stress + cps[i++];
+                while (i < cps.size() && (inSet(kLength, cps[i]) || inSet(kDiacritics, cps[i])))
+                    tok += cps[i++];
+                tokens.push_back(tok);
+            }
             continue;
         }
         if (inSet(kLength, ch) || inSet(kDiacritics, ch)) {
@@ -168,23 +183,26 @@ std::string toModelPhones(const std::string& normalized, const std::string& ipa,
 
     const bool aligned = (words.size() == groups.size());
     std::vector<std::string> out;
+    if (!aligned) {
+        // Word/group counts disagree (contractions, joined words, numbers): the live
+        // espeak IPA is the source of truth.  Emit the whole group stream EXACTLY ONCE
+        // — emitting it per word duplicated the sentence N times.
+        for (const std::string& g : groups)
+            for (const std::string& p : ipaGroupToPhonemes(g))
+                out.push_back(langTag + ":" + p);
+        std::string joined;
+        for (size_t k = 0; k < out.size(); ++k) {
+            if (k) joined += " ";
+            joined += out[k];
+        }
+        return joined;
+    }
     for (size_t i = 0; i < words.size(); ++i) {
         auto it = lexicon.find(words[i]);
         if (it != lexicon.end() && !it->second.empty()) {
             std::istringstream ss(it->second);
             std::string tok;
             while (ss >> tok) out.push_back(tok);
-            continue;
-        }
-        // A lone letter is phonemised into several IPA groups (e.g. ح ->
-        // "hˈe jˈe dʒˈimi"), so word/group counts never match.  Emit the
-        // whole group sequence for that single word.
-        if (!aligned) {
-            if (words.size() == 1 && !groups.empty()) {
-                for (const std::string& g : groups)
-                    for (const std::string& p : ipaGroupToPhonemes(g))
-                        out.push_back(langTag + ":" + p);
-            }
             continue;
         }
         for (const std::string& p : ipaGroupToPhonemes(groups[i]))
