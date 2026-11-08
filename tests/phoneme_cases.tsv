@@ -32,31 +32,31 @@ FA	ن	fa:n fa:ˈu fa:n
 FA	و	fa:v fa:ˈɑ fa:v
 FA	ه	fa:h fa:ˈe fa:j fa:ˈe fa:d fa:ˈo fa:t fa:ʃ fa:ˈe fa:ʃ fa:m
 FA	ی	fa:j fa:ˈɑ fa:ʔ
-EN	letter_a	en:ˈeɪ
+EN	letter_a	en:ˈe en:ɪ
 EN	letter_b	en:b en:ˈiː
 EN	letter_c	en:s en:ˈiː
 EN	letter_d	en:d en:ˈiː
 EN	letter_e	en:ˈiː
 EN	letter_f	en:ˈɛ en:f
-EN	letter_g	en:dʒ en:ˈiː
-EN	letter_h	en:ˈeɪ en:tʃ
-EN	letter_i	en:ˈaɪ
-EN	letter_j	en:dʒ en:ˈeɪ
-EN	letter_k	en:k en:ˈeɪ
+EN	letter_g	en:d en:ʒ en:ˈiː
+EN	letter_h	en:ˈe en:ɪ en:t en:ʃ
+EN	letter_i	en:ˈa en:ɪ
+EN	letter_j	en:d en:ʒ en:ˈe en:ɪ
+EN	letter_k	en:k en:ˈe en:ɪ
 EN	letter_l	en:ˈɛ en:l
 EN	letter_m	en:ˈɛ en:m
 EN	letter_n	en:ˈɛ en:n
-EN	letter_o	en:ˈoʊ
+EN	letter_o	en:ˈo en:ʊ
 EN	letter_p	en:p en:ˈiː
 EN	letter_q	en:k en:j en:ˈuː
-EN	letter_r	en:ˈɑ en:ɹ
+EN	letter_r	en:ˈa en:r
 EN	letter_s	en:ˈɛ en:s
 EN	letter_t	en:t en:ˈiː
 EN	letter_u	en:j en:ˈuː
 EN	letter_v	en:v en:ˈiː
-EN	letter_w	en:d en:ˈʌ en:b en:ə en:l en:j en:ˈuː
+EN	letter_w	en:d en:ˈʌ en:b en:l en:j en:uː
 EN	letter_x	en:ˈɛ en:k en:s
-EN	letter_y	en:w en:ˈaɪ
+EN	letter_y	en:w en:ˈa en:ɪ
 EN	letter_z	en:z en:ˈiː
 FA	0	fa:s fa:ˈe fa:f fa:r
 FA	7	fa:h fa:ˈa fa:f fa:t

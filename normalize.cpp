@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cstdio>
 #include <map>
+#include <cctype>
 
 static bool persianResourcesInitialized = false;
 
@@ -49,6 +50,39 @@ static std::string faLetterLookup(const std::string& text) {
     return it == faLetterNames().end() ? "" : it->second;
 }
 
+// Canonical English letter names.  espeak spells a lone "A" as the letter it
+// stands for only sometimes and reads "letter_a" as the word "lettera", so a
+// lone letter is answered from this table.  Diphthongs are written with the
+// phones our inventory actually has (eɪ -> "e ɪ", aɪ -> "a ɪ", oʊ -> "o ʊ"):
+// @en:ˈeɪ and @en:ˈaɪ do not exist in the symbol table, they are dropped.
+static const std::map<char, std::string>& enLetterNames() {
+    static const std::map<char, std::string> m = {
+        {'A', "ˈe ɪ"},   {'B', "bˈiː"},  {'C', "sˈiː"},  {'D', "dˈiː"},
+        {'E', "ˈiː"},    {'F', "ˈɛ f"},  {'G', "dʒˈiː"}, {'H', "ˈe ɪ tʃ"},
+        {'I', "ˈa ɪ"},   {'J', "dʒˈe ɪ"},{'K', "kˈe ɪ"}, {'L', "ˈɛ l"},
+        {'M', "ˈɛ m"},   {'N', "ˈɛ n"},  {'O', "ˈo ʊ"},  {'P', "pˈiː"},
+        {'Q', "k jˈuː"}, {'R', "ˈa r"},  {'S', "ˈɛ s"},  {'T', "tˈiː"},
+        {'U', "jˈuː"},   {'V', "vˈiː"},  {'W', "dˈʌ b l j uː"},
+        {'X', "ˈɛ k s"}, {'Y', "wˈa ɪ"}, {'Z', "zˈiː"},
+    };
+    return m;
+}
+
+static std::string enLetterLookup(const std::string& text) {
+    size_t a = text.find_first_not_of(" \t\r\n");
+    if (a == std::string::npos) return "";
+    size_t b = text.find_last_not_of(" \t\r\n");
+    std::string t = text.substr(a, b - a + 1);
+    // accept "A"/"a" and the corpus form "letter_a"
+    const std::string prefix = "letter_";
+    if (t.size() == prefix.size() + 1 && t.compare(0, prefix.size(), prefix) == 0)
+        t = t.substr(prefix.size());
+    if (t.size() != 1) return "";
+    char c = static_cast<char>(std::toupper(static_cast<unsigned char>(t[0])));
+    auto it = enLetterNames().find(c);
+    return it == enLetterNames().end() ? "" : it->second;
+}
+
 // Original signature — wraps the config-based version with default paths
 void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
      std::string &normalizedString, std::string &ipaString) 
@@ -79,6 +113,14 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
     // before espeak sees it (its fa dictionary mangles پ/گ/غ/ق).
     if (mainlang == Language::PERSIAN) {
         std::string lone = faLetterLookup(input);
+        if (!lone.empty()) {
+            normalizedString = input;
+            if (ipa_mode) ipaString = lone;
+            return;
+        }
+    }
+    if (mainlang == Language::ENGLISH) {
+        std::string lone = enLetterLookup(input);
         if (!lone.empty()) {
             normalizedString = input;
             if (ipa_mode) ipaString = lone;
