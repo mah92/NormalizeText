@@ -10,8 +10,10 @@
 #include "phoneme_ids.hpp"
 #include "uni_algo.h"
 
-#if 1
-//To work on espeaks before version 1.53
+#if !defined(ESPEAK_NG_HAS_TEXT_TO_PHONEMES_WITH_TERMINATOR)
+// Workaround for espeak-ng < 1.53 (system packages). Newer espeak-ng (1.53+)
+// provides espeak_TextToPhonemesWithTerminator natively — define
+// ESPEAK_NG_HAS_TEXT_TO_PHONEMES_WITH_TERMINATOR=1 at build time to skip this.
 #include "text_to_phonemes_with_terminator.h"
 #endif
 

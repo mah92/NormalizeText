@@ -8,15 +8,28 @@ EzafeDetector::EzafeDetector(const std::string& onnx_path,
                              const std::string& spiece_path)
     : env_(ORT_LOGGING_LEVEL_WARNING, "ezafe")
 {
-    // Load SentencePiece tokenizer
+    // Load SentencePiece tokenizer. On failure mark the detector UNUSABLE
+    // instead of throwing — an optional NormalizeText component must never
+    // take down the whole TTS pipeline (2026-09-04: empty/disabled paths
+    // made every matcha synthesis on Android return no audio).
     if (!tokenizer_.Load(spiece_path))
-        throw std::runtime_error("Failed to load SentencePiece model: " + spiece_path);
+        return;
 
     // Load ONNX model (same pattern as hush_enhance_onnx.cpp)
-    Ort::SessionOptions session_options;
-    session_options.SetIntraOpNumThreads(1);
-    session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-    session_ = std::make_unique<Ort::Session>(env_, onnx_path.c_str(), session_options);
+    try {
+        Ort::SessionOptions session_options;
+        session_options.SetIntraOpNumThreads(1);
+        // ANDROID (ARMv7 + ORT 1.18): ORT_ENABLE_ALL SIGBUSes (BUS_ADRALN) during
+        // session creation with this model family — see ADR-014/ADR-031. The v36
+        // commit claimed this fix but only changed the version file + ADR; the
+        // source edit is being committed here for the first time.
+        session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
+        session_ = std::make_unique<Ort::Session>(env_, onnx_path.c_str(), session_options);
+    } catch (...) {
+        usable_ = false;
+        return;
+    }
+    usable_ = true;
 }
 
 namespace {
@@ -53,6 +66,9 @@ bool isNumeralToken(const std::string& w) {
 std::vector<EzafeDetector::Result> EzafeDetector::predict(
     const std::vector<std::string>& words)
 {
+    // Not loaded/usable — behave as "no ezafe detected" (keep original IPA).
+    if (!usable_) return {};
+
     // 1) Tokenize each word individually via SentencePiece, collecting sub-token IDs.
     //    Track word boundaries (same logic as HuggingFace word_ids()).
     std::vector<int64_t> input_ids;

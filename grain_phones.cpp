@@ -163,9 +163,20 @@ std::vector<std::string> ipaGroupToPhonemes(const std::string& group) {
     std::vector<std::string> out;
     for (const std::string& t : tokens)
         if (!isJunkOnly(t)) out.push_back(t);
-    // NOTE: affricates stay TWO phones (t + ʃ / d + ʒ): the 22 kHz model is trained on
-    // split tokens, so the stream must match training.
-    return out;
+    // Affricates are ONE symbol in the model's inventory (@fa:dʒ, @fa:tʃ), but
+    // espeak writes them as two code points (d + ʒ).  Merge the pair so the
+    // stream matches the symbol table instead of emitting d and ʒ separately.
+    std::vector<std::string> merged;
+    for (size_t i = 0; i < out.size(); ++i) {
+        if (i + 1 < out.size() &&
+            ((out[i] == "d" && out[i + 1] == "ʒ") || (out[i] == "t" && out[i + 1] == "ʃ"))) {
+            merged.push_back(out[i] + out[i + 1]);
+            ++i;
+            continue;
+        }
+        merged.push_back(out[i]);
+    }
+    return merged;
 }
 
 std::string toModelPhones(const std::string& normalized, const std::string& ipa,

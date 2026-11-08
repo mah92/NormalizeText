@@ -65,7 +65,7 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
     normalizeString(mainlang, ipa_mode, input, normalizedString, ipaString, config);
 }
 
-// Config-based version — NO hardcoded paths
+// Config-based version
 void normalizeString(const Language mainlang, const int ipa_mode, const std::string& input,
      std::string &normalizedString, std::string &ipaString,
      const NormalizeConfig& config) 
@@ -91,18 +91,23 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
     piper::PhonemeIdConfig idConfig;
     std::vector <std::vector <char32_t>> phonemes;
 
+    // --- replacements + detection ---
+    auto t0 = clock::now();
     normalizedString = performGeneralReplacements(mainlang, input);
-
     LanguageDetector detector(mainlang);
-
     std::vector<DetectedSegment> text_segments = detector.detect_segments(normalizedString);
+    auto t1 = clock::now();
+
+    double espeak_ms = 0, postprocess_ms = 0, espeak_init_ms = 0, pers_init_ms = 0, lang_repl_ms = 0;
     
     for(auto& text_segment : text_segments) {
         auto &segment_text = text_segment.text;
         auto &language = text_segment.language;
         std::string phoneme_segment;
         
+        auto t_lr0 = clock::now();
         segment_text = performLanguageSpecificReplacements(language, mainlang, segment_text);
+        lang_repl_ms += ms(clock::now() - t_lr0).count();
 
         if(language == Language::ARABIC && mainlang == Language::ARABIC) {
             int err = shakkelha_initialize(config.shakkelha_onnx.c_str());
@@ -118,19 +123,22 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
                 ipaString += phoneme_segment;
             }
         } else {
+            auto t_espeak_init0 = clock::now();
             int err = piper::phonemize_eSpeak_Init(data_path);
-            if(err!=0) {
-                std::cout << "Espeak data folder not found!" << std::endl;
-                return;
-            }
+            espeak_init_ms += ms(clock::now() - t_espeak_init0).count();
+
+            if(err!=0) { std::cout << "Espeak data folder not found!" << std::endl; return; }
             phonemes.clear();
             phonemeConfig.voice = (language == Language::PERSIAN || language == Language::ARABIC) ? "fa" : "en-us";
 
             if(ipa_mode) {
+                auto t_esp = clock::now();
                 piper::phonemize_eSpeak(segment_text, phonemeConfig, phonemes); 
                 phoneme_segment = piper::getIpaString(phonemes);
+                espeak_ms += ms(clock::now() - t_esp).count();
 
                 if(language == Language::PERSIAN) {
+                    auto t_pers_init0 = clock::now();
                     if(!persianResourcesInitialized) {
                         persian_phoneme::initPersianResources(
                             config.ezafe_model_onnx.c_str(),
@@ -170,5 +178,14 @@ void normalizeString(const Language mainlang, const int ipa_mode, const std::str
             }
         }
     }
+
     normalizedString = LanguageDetector::reunite_segments(text_segments);
+
+    double total_ms = ms(clock::now() - t_total).count();
+    double repl_detect_ms = ms(t1 - t0).count();
+    double compute_ms = repl_detect_ms + lang_repl_ms + espeak_ms + postprocess_ms;
+    double load_ms = espeak_init_ms + pers_init_ms;
+
+    fprintf(stderr, "[NORM] total=%.1fms  load=%.1fms  compute=%.1fms  repl=%.1f  lang_repl=%.1f  espeak=%.1f  postproc=%.1f\n",
+            total_ms, load_ms, compute_ms, repl_detect_ms, lang_repl_ms, espeak_ms, postprocess_ms);
 }

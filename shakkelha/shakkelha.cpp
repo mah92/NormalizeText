@@ -135,6 +135,13 @@ int shakkelha_initialize(const std::string model_address) {
 
         // Try to load the model (throws if file not found or invalid)
         Ort::SessionOptions session_options;
+        // ANDROID (ARMv7 + ORT 1.18): the DEFAULT optimization level is
+        // ORT_ENABLE_ALL, and ANY level >= BASIC makes libonnxruntime SIGBUS
+        // (BUS_ADRALN) during session creation for this model family — the same
+        // bug ADR-014 pinned for the matcha family. DISABLE_ALL loads clean.
+        // (The v36 commit claimed this fix but only touched the app's version
+        // file + ADR — the source edit had never been committed until now.)
+        session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
         session = std::make_unique<Ort::Session>(*env, model_address.c_str(), session_options);
 
         initialized = true; // Only set if model loads successfully
