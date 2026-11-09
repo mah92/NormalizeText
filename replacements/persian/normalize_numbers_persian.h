@@ -20,6 +20,7 @@ struct NormalizedNumber {
     std::string integer_part;
     std::string fractional_part;
     bool is_valid;
+    bool has_decimal_point = false;   // "3." and ".4" are decimals too (Ali 2026-11)
 };
 
 struct SpecialNumberInfo {
@@ -54,6 +55,7 @@ inline NormalizedNumber normalize(const std::string& input) {
                 return result;
             }
             decimal_point_found = true;
+            result.has_decimal_point = true;
             i++;
             continue;
         }
@@ -259,6 +261,12 @@ inline std::string process_token(const std::string& token) {
             }
         }
         return result;
+    }
+
+    // A dot with digits on only one side is still a decimal: «3.» -> «سه ممیز»
+    if (normalized.fractional_part.empty() && normalized.has_decimal_point &&
+        !normalized.integer_part.empty()) {
+        return number_to_words(normalized.integer_part) + " ممیز";
     }
 
     // Handle regular numbers with fractions
