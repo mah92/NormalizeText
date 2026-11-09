@@ -203,22 +203,23 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
     using ms = std::chrono::duration<double, std::milli>;
     const auto t_total = clock::now();
 
-    if (mainlang == Language::PERSIAN) {
+    // A lone letter is answered by NAME whichever engine language the caller declared: the app
+    // always declares FA, so gating this on mainlang let a Latin "b" reach espeak's fa voice
+    // ("beit") and single vowels (e/a/i/o) come back empty.
+    {
         std::string lone = faLetterLookup(input);
-        if (!lone.empty()) {
-            normalized = input;
-            segments.clear();
-            segments.push_back({mainlang, input, lone});
-            return;
+        if (lone.empty()) lone = enLetterLookup(input);
+        Language tag = mainlang;
+        if (lone.empty()) {
+            lone = enLetterSequenceLookup(input);
+            if (!lone.empty()) tag = Language::ENGLISH;
+        } else {
+            tag = faLetterNames().count(input) ? Language::PERSIAN : Language::ENGLISH;
         }
-    }
-    if (mainlang == Language::ENGLISH) {
-        std::string lone = enLetterLookup(input);
-        if (lone.empty()) lone = enLetterSequenceLookup(input);
         if (!lone.empty()) {
             normalized = input;
             segments.clear();
-            segments.push_back({mainlang, input, lone});
+            segments.push_back({tag, input, lone});
             return;
         }
     }
