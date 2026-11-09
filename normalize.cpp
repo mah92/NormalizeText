@@ -9,12 +9,14 @@
 
 #include <fstream>
 #include <map>
+#include <cctype>
 #include <set>
 #include <sstream>
 
 #include <iostream>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <vector>
 
 namespace {
@@ -81,6 +83,104 @@ bool persianResourcesInitialized = false;
 // One phonemized segment: the detector's language decision kept together with
 // its IPA, so callers can tag each segment with its OWN language (ADR-048).
 // ---------------------------------------------------------------------------
+// Canonical pronunciation of a single Persian letter.  espeak's fa dictionary
+// gets a few of these wrong (پ -> "pˈee", گ -> "ɡɡˈɑf", غ/ق -> "q1..."), so a
+// lone letter is answered from this table instead.  Only applies when the whole
+// segment is exactly one letter, so normal text is untouched.
+static const std::map<std::string, std::string>& faLetterNames() {
+    static const std::map<std::string, std::string> m = {
+        {"ا", "ˈalef"},        {"ب", "bˈɑʔ"},        {"پ", "pˈe"},
+        {"ت", "tˈe jˈe dˈo nˈoqteː"},
+        {"ث", "sˈeː jˈe sˈeː nˈoqteː"},
+        {"ج", "dʒˈim"},        {"چ", "tʃˈeː"},
+        {"ح", "hˈe jˈe dʒˈimi"},  {"خ", "xˈɑʔ"},        {"د", "dˈɑl"},
+        {"ذ", "zˈɑl"},        {"ر", "rˈɑʔ"},
+        {"ز", "zˈe jˈe rˈeʔi"}, {"ژ", "ʒˈeː"},
+        {"س", "sˈeː jˈe sˈeː dandˈuːneː"},
+        {"ش", "ʃˈin"},        {"ص", "sˈɑd"},        {"ض", "zˈɑd"},
+        {"ط", "tˈe jˈe dˈasteː dˈɑr"},
+        {"ظ", "zˈe jˈe dˈasteː dˈɑr"},
+        {"ع", "ˈejn"},        {"غ", "qˈejn"},       {"ف", "fˈeː"},
+        {"ق", "qˈɑf"},        {"ک", "kˈɑf"},        {"گ", "ɡˈɑf"},
+        {"ل", "lˈɑm"},        {"م", "mˈim"},        {"ن", "nˈun"},
+        {"و", "vˈɑv"},        {"ه", "hˈe jˈe dˈo tʃˈeʃm"},
+        {"ی", "jˈɑʔ"},
+    };
+    return m;
+}
+
+static std::string faLetterLookup(const std::string& text) {
+    // trim surrounding spaces
+    size_t a = text.find_first_not_of(" \t\r\n");
+    if (a == std::string::npos) return "";
+    size_t b = text.find_last_not_of(" \t\r\n");
+    std::string t = text.substr(a, b - a + 1);
+    auto it = faLetterNames().find(t);
+    return it == faLetterNames().end() ? "" : it->second;
+}
+
+// Canonical English letter names.  espeak reads "A" as ɐ and "B" as "bite" once the
+// input is longer than one character, and "letter_a" as the word "lettera", so a
+// lone letter (or a run of letters) is answered from this table.  This model's
+// inventory has the real diphthongs (eɪ / aɪ / oʊ) and ɹ, so the names are exact.
+static const std::map<char, std::string>& enLetterNames() {
+    static const std::map<char, std::string> m = {
+        {'A', "ˈeɪ"},    {'B', "bˈiː"},  {'C', "sˈiː"},  {'D', "dˈiː"},
+        {'E', "ˈiː"},    {'F', "ˈɛf"},   {'G', "dʒˈiː"}, {'H', "ˈeɪtʃ"},
+        {'I', "ˈaɪ"},    {'J', "dʒˈeɪ"}, {'K', "kˈeɪ"},  {'L', "ˈɛl"},
+        {'M', "ˈɛm"},    {'N', "ˈɛn"},   {'O', "ˈoʊ"},   {'P', "pˈiː"},
+        {'Q', "kjˈuː"},  {'R', "ˈɑɹ"},   {'S', "ˈɛs"},   {'T', "tˈiː"},
+        {'U', "jˈuː"},   {'V', "vˈiː"},  {'W', "dˈʌbljuː"},
+        {'X', "ˈɛks"},   {'Y', "wˈaɪ"},  {'Z', "zˈiː"},
+    };
+    return m;
+}
+
+static std::string enLetterLookup(const std::string& text) {
+    size_t a = text.find_first_not_of(" \t\r\n");
+    if (a == std::string::npos) return "";
+    size_t b = text.find_last_not_of(" \t\r\n");
+    std::string t = text.substr(a, b - a + 1);
+    const std::string prefix = "letter_";
+    if (t.size() == prefix.size() + 1 && t.compare(0, prefix.size(), prefix) == 0)
+        t = t.substr(prefix.size());
+    if (t.size() != 1) return "";
+    char c = static_cast<char>(std::toupper(static_cast<unsigned char>(t[0])));
+    auto it = enLetterNames().find(c);
+    return it == enLetterNames().end() ? "" : it->second;
+}
+
+// A run of single letters ("A B C", "R, E, D") is spelled letter by letter.
+static std::string enLetterSequenceLookup(const std::string& text) {
+    std::string out;
+    std::string tok;
+    int count = 0;
+    auto flush = [&]() -> bool {
+        if (tok.empty()) return true;
+        std::string name;
+        if (tok.size() == 1) {
+            char c = static_cast<char>(std::toupper(static_cast<unsigned char>(tok[0])));
+            auto it = enLetterNames().find(c);
+            if (it != enLetterNames().end()) name = it->second;
+        }
+        tok.clear();
+        if (name.empty()) return false;
+        if (!out.empty()) out += " ";
+        out += name;
+        ++count;
+        return true;
+    };
+    for (char ch : text) {
+        if (ch == ' ' || ch == '\t' || ch == ',' || ch == '.' || ch == ';' || ch == '-') {
+            if (!flush()) return "";
+        } else {
+            tok += ch;
+        }
+    }
+    if (!flush()) return "";
+    return count >= 2 ? out : "";
+}
+
 struct SegmentIpa {
     Language language;
     std::string text;
@@ -102,6 +202,26 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
     using clock = std::chrono::high_resolution_clock;
     using ms = std::chrono::duration<double, std::milli>;
     const auto t_total = clock::now();
+
+    if (mainlang == Language::PERSIAN) {
+        std::string lone = faLetterLookup(input);
+        if (!lone.empty()) {
+            normalized = input;
+            segments.clear();
+            segments.push_back({mainlang, input, lone});
+            return;
+        }
+    }
+    if (mainlang == Language::ENGLISH) {
+        std::string lone = enLetterLookup(input);
+        if (lone.empty()) lone = enLetterSequenceLookup(input);
+        if (!lone.empty()) {
+            normalized = input;
+            segments.clear();
+            segments.push_back({mainlang, input, lone});
+            return;
+        }
+    }
 
     const char* data_path = config.espeak_data_path.empty() ? NULL : config.espeak_data_path.c_str();
     piper::eSpeakPhonemeConfig phonemeConfig;

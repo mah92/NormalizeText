@@ -68,6 +68,14 @@ std::string disambiguateHomograph(
         }
     }
 
+    // No context word matched ANY reading (a lone word, or a sentence whose lemmas are
+    // absent from the table).  Picking the first JSON key there is arbitrary and reads
+    // «کرد» as kˈord and «جنگ» as dʒˈonɡ; the espeak reading (kˈard / dʒˈanɡ) is the right
+    // default, so fall back to it unless some evidence exists.
+    if (maxScore <= 0.0) {
+        return fallbackPhoneme;
+    }
+
     return bestPhoneme.empty() ? fallbackPhoneme : bestPhoneme;
 }
 
