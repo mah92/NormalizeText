@@ -182,7 +182,10 @@ std::string postprocessPersianIPA(
                 "نود", "صد", "یکصد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد",
                 "هفتصد", "هشتصد", "نهصد", "هزار", "میلیون", "میلیارد"};
             std::string w = cleanWord;
-            while (!w.empty() && (w.back() == '\u200c')) w.pop_back();
+            // strip a trailing ZWNJ (U+200C, three UTF-8 bytes): a multi-byte char
+            // literal is rejected by clang, which is what the Android NDK uses
+            while (w.size() >= 3 && w.compare(w.size() - 3, 3, "\u200c") == 0)
+                w.resize(w.size() - 3);
             if (kNumberWords.count(w)) needsEzafe = false;
         }
         // A real ezafe is never followed by a preposition/particle; without this guard the
