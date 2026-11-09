@@ -122,13 +122,13 @@ inline std::string group_to_words(int num) {
     if (hundred > 0) {
         result += hundreds.at(hundred);
         num %= 100;
-        if (num > 0) result += " و ";
+        if (num > 0) result += "\u064F ";
     }
 
     if (num >= 20) {
         result += tens.at((num / 10) * 10);
         num %= 10;
-        if (num > 0) result += " و " + units[num];
+        if (num > 0) result += "\u064F " + units[num];
     } else if (num > 0) {
         result += units[num];
     }
@@ -224,7 +224,7 @@ inline std::string number_to_words(const std::string& normalized) {
     std::string result;
     for (const auto& group : group_words) {
         if (!result.empty()) {
-            result += " و ";
+            result += "\u064F ";
         }
         result += group;
     }
