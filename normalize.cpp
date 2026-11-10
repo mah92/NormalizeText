@@ -222,7 +222,8 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
         size_t b = t.find_first_not_of(" \t\u200c");
         if (b != std::string::npos && b + 1 < t.size() && t[b] == '.' &&
             isDigitOrPersianAt(t, b + 1)) {
-            t.insert(b, "0");
+            // «.۴» is read «ممیز چهار», not «صفر ممیز چهار» (Ali 2026-11).
+            t.replace(b, 1, "\u0645\u0645\u06cc\u0632 ");
             input_fixed = t;
         }
     }
