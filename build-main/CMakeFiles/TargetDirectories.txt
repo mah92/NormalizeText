@@ -1,0 +1,3 @@
+/home/oem/Basir/G2P/NormalizeText/build-main/CMakeFiles/NormalizeCSV.dir
+/home/oem/Basir/G2P/NormalizeText/build-main/CMakeFiles/edit_cache.dir
+/home/oem/Basir/G2P/NormalizeText/build-main/CMakeFiles/rebuild_cache.dir

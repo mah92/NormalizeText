@@ -29,6 +29,17 @@ struct SpecialNumberInfo {
 };
 
 // ==================== Core Functions ====================
+// UTF-8 aware digit test: ASCII, Persian (U+06F0..U+06F9) and Arabic-Indic (U+0660..U+0669).
+inline bool is_digit_at(const std::string& s, size_t pos) {
+    unsigned char c = static_cast<unsigned char>(s[pos]);
+    if (c >= '0' && c <= '9') return true;
+    if (pos + 1 >= s.size()) return false;
+    unsigned char d = static_cast<unsigned char>(s[pos + 1]);
+    if (c == 0xDB && d >= 0xB0 && d <= 0xB9) return true;   // ۰..۹
+    if (c == 0xD9 && d >= 0xA0 && d <= 0xA9) return true;   // ٠..٩
+    return false;
+}
+
 inline NormalizedNumber normalize(const std::string& input) {
     NormalizedNumber result;
     result.is_valid = true;
@@ -285,7 +296,26 @@ inline std::string process_token(const std::string& token) {
 }
 
 
-inline std::string normalize_text(const std::string& input) {
+// Fold Persian (U+06F0..U+06F9) and Arabic-Indic (U+0660..U+0669) digits to ASCII so the
+// tokeniser below, which works byte by byte with isdigit(), can see them. Without this,
+// «۵.۶» and a leading «.۴» never reach the decimal path at all.
+inline std::string fold_digits(const std::string& in) {
+    std::string out;
+    out.reserve(in.size());
+    for (size_t i = 0; i < in.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(in[i]);
+        if (i + 1 < in.size()) {
+            unsigned char d = static_cast<unsigned char>(in[i + 1]);
+            if (c == 0xDB && d >= 0xB0 && d <= 0xB9) { out.push_back(char('0' + (d - 0xB0))); ++i; continue; }
+            if (c == 0xD9 && d >= 0xA0 && d <= 0xA9) { out.push_back(char('0' + (d - 0xA0))); ++i; continue; }
+        }
+        out.push_back(in[i]);
+    }
+    return out;
+}
+
+inline std::string normalize_text(const std::string& raw_input) {
+    const std::string input = fold_digits(raw_input);
     std::string result;
     std::string current_token;
     
@@ -307,8 +337,9 @@ inline std::string normalize_text(const std::string& input) {
             if(i > 0 && isdigit(input[i-1])) {
                 valid_decimal = true;
             }
-            // Check next character
-            else if(i < input.size()-1 && isdigit(input[i+1])) {
+            // Check next character: Persian/Arabic digits are two bytes, so isdigit()
+            // on a single byte never sees them and a leading ".۴" lost its point
+            else if(i + 1 < input.size() && is_digit_at(input, i + 1)) {
                 valid_decimal = true;
             }
             

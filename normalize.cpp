@@ -150,6 +150,16 @@ static std::string enLetterLookup(const std::string& text) {
     return it == enLetterNames().end() ? "" : it->second;
 }
 
+static bool isDigitOrPersianAt(const std::string& s, size_t pos) {
+    unsigned char c = static_cast<unsigned char>(s[pos]);
+    if (c >= '0' && c <= '9') return true;
+    if (pos + 1 >= s.size()) return false;
+    unsigned char d = static_cast<unsigned char>(s[pos + 1]);
+    if (c == 0xDB && d >= 0xB0 && d <= 0xB9) return true;
+    if (c == 0xD9 && d >= 0xA0 && d <= 0xA9) return true;
+    return false;
+}
+
 // A run of single letters ("A B C", "R, E, D") is spelled letter by letter.
 static std::string enLetterSequenceLookup(const std::string& text) {
     std::string out;
@@ -203,6 +213,20 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
     using ms = std::chrono::duration<double, std::milli>;
     const auto t_total = clock::now();
 
+    // «.۴» — a decimal whose integer part is missing. The segmenter treats a full stop as a
+    // sentence break, so the point was dropped before the number converter ever saw it.
+    // Spelling it «0.۴» keeps it one number and reads «صفر ممیز چهار» (Ali 2026-11).
+    std::string input_fixed = input;
+    {
+        std::string t = input_fixed;
+        size_t b = t.find_first_not_of(" \t\u200c");
+        if (b != std::string::npos && b + 1 < t.size() && t[b] == '.' &&
+            isDigitOrPersianAt(t, b + 1)) {
+            t.insert(b, "0");
+            input_fixed = t;
+        }
+    }
+
     // A lone letter is answered by NAME whichever engine language the caller declared: the app
     // always declares FA, so gating this on mainlang let a Latin "b" reach espeak's fa voice
     // ("beit") and single vowels (e/a/i/o) come back empty.
@@ -224,12 +248,13 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
         }
     }
 
+    const std::string& input_text = input_fixed;
     const char* data_path = config.espeak_data_path.empty() ? NULL : config.espeak_data_path.c_str();
     piper::eSpeakPhonemeConfig phonemeConfig;
     std::vector<std::vector<char32_t>> phonemes;
 
     auto t0 = clock::now();
-    normalized = performGeneralReplacements(mainlang, input);
+    normalized = performGeneralReplacements(mainlang, input_text);
     normalized = joinDigitGroupSeparators(normalized);
     LanguageDetector detector(mainlang);
     std::vector<DetectedSegment> text_segments = detector.detect_segments(normalized);
