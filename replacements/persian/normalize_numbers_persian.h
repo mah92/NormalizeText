@@ -115,7 +115,7 @@ inline std::vector<std::string> split_into_groups(const std::string& s, int grou
 // ==================== Conversion Logic ====================
 inline std::string group_to_words(int num) {
     static const std::vector<std::string> units = {
-        "", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه",
+        "", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نُه",
         "ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده",
         "هفده", "هجده", "نوزده"
     };
@@ -160,7 +160,7 @@ inline std::string digit_to_word(char c) {
         case '6': return "شش";
         case '7': return "هفت";
         case '8': return "هشت";
-        case '9': return "نه";
+        case '9': return "نُه";
         default: return "";
     }
 }
