@@ -29,14 +29,16 @@ def read_cases(path):
     return cases
 
 
-def run_batch(binary, lex, lang, texts):
+def run_batch(binary, lex, lang, texts, symbols=""):
     with tempfile.TemporaryDirectory() as tmp:
         src = os.path.join(tmp, "cases.txt")
         with open(src, "w", encoding="utf-8") as f:
             for i, t in enumerate(texts):
                 f.write(f"C{i:04d}|{t}\n")
+        # The engine CLI is "NormalizeCSV <lang> <file> --grain [--symbols f]"; the lexicon path
+        # argument of the older main-branch build no longer exists.
         subprocess.run(
-            [binary, lang, src, "--grain", lex],
+            [binary, lang, src, "--grain"] + (["--symbols", symbols] if symbols else []),
             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
         out = {}
@@ -54,13 +56,14 @@ def main():
     ap.add_argument("--lex", default=os.path.expanduser(
         "~/Basir/TTS/GrainSpeech/lex_matcha"))
     ap.add_argument("--cases", default="tests/phoneme_cases.tsv")
+    ap.add_argument("--symbols", default="", help="model symbol table; with it the cases test the inventory stream the engine sees")
     args = ap.parse_args()
 
     cases = read_cases(args.cases)
     got = {}
     for lang in sorted({c[0] for c in cases}):
         texts = [c[1] for c in cases if c[0] == lang]
-        for t, p in zip(texts, run_batch(args.bin, args.lex, lang, texts)):
+        for t, p in zip(texts, run_batch(args.bin, args.lex, lang, texts, args.symbols)):
             got[(lang, t)] = p
 
     bad = 0

@@ -232,19 +232,24 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
     // always declares FA, so gating this on mainlang let a Latin "b" reach espeak's fa voice
     // ("beit") and single vowels (e/a/i/o) come back empty.
     {
-        std::string lone = faLetterLookup(input);
-        if (lone.empty()) lone = enLetterLookup(input);
+        // The Persian word «الف» IS the letter ا spoken by name ("alef"). espeak reads it as the
+        // spelling «aːlfa», so a lone «الف» is handled by the letter-name path instead.
+        std::string input_for_lookup = input;
+        if (input == "\xD8\xA7\xD9\x84\xD9\x81") input_for_lookup = "\xD8\xA7";
+
+        std::string lone = faLetterLookup(input_for_lookup);
+        if (lone.empty()) lone = enLetterLookup(input_for_lookup);
         Language tag = mainlang;
         if (lone.empty()) {
-            lone = enLetterSequenceLookup(input);
+            lone = enLetterSequenceLookup(input_for_lookup);
             if (!lone.empty()) tag = Language::ENGLISH;
         } else {
-            tag = faLetterNames().count(input) ? Language::PERSIAN : Language::ENGLISH;
+            tag = faLetterNames().count(input_for_lookup) ? Language::PERSIAN : Language::ENGLISH;
         }
         if (!lone.empty()) {
-            normalized = input;
+            normalized = input_for_lookup;
             segments.clear();
-            segments.push_back({tag, input, lone});
+            segments.push_back({tag, input_for_lookup, lone});
             return;
         }
     }
@@ -308,6 +313,22 @@ void buildSegments(Language mainlang, const std::string& input, const NormalizeC
                 auto t_post0 = clock::now();
                 phoneme_segment = persian_phoneme::postprocessPersianIPA(segment_text, phoneme_segment);
                 postprocess_ms += ms(clock::now() - t_post0).count();
+
+                // espeak's fa output marks ق/غ as "q1"; the model phone set only knows "q".
+                for (size_t qpos; (qpos = phoneme_segment.find("q1")) != std::string::npos; )
+                    phoneme_segment.replace(qpos, 2, "q");
+
+                // espeak returns nothing when a clause STARTS with words such as «الف»; a leading
+                // space changes the clause start without altering the phonemes.
+                const bool blank = phoneme_segment.find_first_not_of(" \t\r\n") == std::string::npos;
+                const bool hasText = segment_text.find_first_not_of(" \t\r\n") != std::string::npos;
+                if (blank && hasText) {
+                    std::vector<std::vector<char32_t>> again;
+                    piper::phonemize_eSpeak(" " + segment_text, phonemeConfig, again);
+                    const std::string retry = piper::getIpaString(again);
+                    if (retry.find_first_not_of(" \t\r\n") != std::string::npos)
+                        phoneme_segment = retry;
+                }
             }
         }
 

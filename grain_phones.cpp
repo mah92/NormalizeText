@@ -1,5 +1,9 @@
 #include "grain_phones.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <cstdio>
+
 #include <cctype>
 #include <set>
 #include <sstream>
@@ -221,6 +225,61 @@ void mergeEnglishDiphthongs(std::vector<std::string>& tokens) {
 }
 
 // ---------------------------------------------------------------------------
+// Last resort: a single token that carries several phones ("ˈɑɹ", "eɪ") is split into the longest
+// run of phones the inventory actually knows. Without this the engine silently drops the whole token
+// (that is how the letter «r» lost its vowel after the app moved to the 22 kHz table).
+static bool decomposeAgainstInventory(const std::string& rest, const std::string& prefix,
+                                      const std::string& stress,
+                                      const std::set<std::string>& knownTokens,
+                                      std::vector<std::string>& out) {
+    auto strip_stress = [](const std::string& core, std::string& base) {
+        base = core;
+        while (base.size() >= 2 && static_cast<unsigned char>(base[0]) == 0xCB
+               && (static_cast<unsigned char>(base[1]) == 0x88
+                   || static_cast<unsigned char>(base[1]) == 0x8C)) {
+            base.erase(0, 2);
+        }
+    };
+    // collect the bare cores the inventory carries under this prefix
+    std::vector<std::string> cores;
+    for (const std::string& tok : knownTokens) {
+        std::string t = tok;
+        if (!t.empty() && t[0] == '@') t.erase(0, 1);
+        if (t.compare(0, prefix.size(), prefix) != 0) continue;
+        std::string core, base;
+        core = t.substr(prefix.size());
+        strip_stress(core, base);
+        if (!base.empty()) cores.push_back(base);
+    }
+    if (cores.empty()) return false;
+    std::sort(cores.begin(), cores.end(), [](const std::string& a, const std::string& b) {
+        return a.size() > b.size();
+    });
+
+    std::vector<std::string> pieces;
+    size_t pos = 0;
+    while (pos < rest.size()) {
+        bool matched = false;
+        for (const std::string& c : cores) {
+            if (rest.compare(pos, c.size(), c) == 0) {
+                pieces.push_back(c);
+                pos += c.size();
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) return false;
+    }
+    if (pieces.size() < 2) return false;      // nothing gained
+    for (size_t i = 0; i < pieces.size(); ++i) {
+        std::string cand = prefix + (i == 0 ? stress : std::string()) + pieces[i];
+        if (knownTokens.find("@" + cand) == knownTokens.end()) cand = prefix + pieces[i];
+        if (knownTokens.find("@" + cand) == knownTokens.end()) return false;
+        out.push_back(cand);
+    }
+    return true;
+}
+
 std::vector<std::string> mapPhonesToInventory(
         const std::vector<std::string>& in,
         const std::set<std::string>& knownTokens) {
@@ -268,6 +327,33 @@ std::vector<std::string> mapPhonesToInventory(
         // 1) already a symbol the model knows
         if (has(in[i])) { out.push_back(in[i]); continue; }
 
+        // 2) the core path merges espeak's split English diphthongs into one token (eɪ, aɪ, oʊ ...).
+        //    The 22.05 kHz model's alphabet carries the two halves and NOT the merged token, so when
+        //    the inventory lacks the merged form it must be split again — otherwise phones_to_ids
+        //    silently drops the whole vowel.
+        {
+            struct Split { const char* merged; const char* a; const char* b; };
+            static const Split kSplits[] = {
+                {"e\xC9\xAA", "e", "\xC9\xAA"},                    // eɪ
+                {"a\xC9\xAA", "a", "\xC9\xAA"},                    // aɪ
+                {"o\xCA\x8A", "o", "\xCA\x8A"},                    // oʊ
+                {"a\xCA\x8A", "a", "\xCA\x8A"},                    // aʊ
+                {"\xC9\x94\xC9\xAA", "\xC9\x94", "\xC9\xAA"},  // ɔɪ
+            };
+            bool splitDone = false;
+            for (const auto& sp : kSplits) {
+                if (rest != sp.merged) continue;
+                const std::string first = prefix + stress + sp.a;
+                const std::string second = prefix + sp.b;
+                if (has(first) && has(second)) {
+                    out.push_back(first);
+                    out.push_back(second);
+                    splitDone = true;
+                }
+                break;
+            }
+            if (splitDone) continue;
+        }
         // 2) espeak's split English diphthongs are already merged in the core path
         //    (mergeEnglishDiphthongs in toModelPhones), so nothing to do here — the merge belongs to
         //    the front-end, not to this alphabet-fitting layer.
@@ -278,6 +364,8 @@ std::vector<std::string> mapPhonesToInventory(
             {"\xC9\xBE",     "t"},                            // ɾ  -> t  (the trained English labels write the
                                                               //          American flap as t: data/better/water)
             {"r",            "\xC9\xB9"},                    // r  -> ɹ
+            {"\xC9\xB9",     "r"},                            // ɹ  -> r  (the 22 kHz table carries r, not ɹ)
+            {"\xC9\x91",     "a"},                            // ɑ  -> a  (… and a, not ɑ)
             {"i",            "\xC9\xAA"},                    // i  -> ɪ  (espeak's bare i; not in the alphabet)
             {"o\xCB\x90",     "o\xCA\x8A"},                    // oː -> oʊ  (espeak's long o; not in the alphabet)
             {"\xC9\x90",     "\xC9\x99"},                    // ɐ  -> ə
@@ -323,6 +411,15 @@ std::vector<std::string> mapPhonesToInventory(
             if (has(prefix + head) && has(prefix + P_SCHWA)) {
                 out.push_back(prefix + stress + head);
                 out.push_back(prefix + P_SCHWA);
+                continue;
+            }
+        }
+
+        // 7b) the token may hold several phones at once
+        {
+            std::vector<std::string> pieces;
+            if (decomposeAgainstInventory(rest, prefix, stress, knownTokens, pieces)) {
+                for (const auto& pc : pieces) out.push_back(pc);
                 continue;
             }
         }
