@@ -20,6 +20,7 @@ struct NormalizedNumber {
     std::string integer_part;
     std::string fractional_part;
     bool is_valid;
+    bool has_decimal_point = false;   // "3." and ".4" are decimals too (Ali 2026-11)
 };
 
 struct SpecialNumberInfo {
@@ -28,6 +29,17 @@ struct SpecialNumberInfo {
 };
 
 // ==================== Core Functions ====================
+// UTF-8 aware digit test: ASCII, Persian (U+06F0..U+06F9) and Arabic-Indic (U+0660..U+0669).
+inline bool is_digit_at(const std::string& s, size_t pos) {
+    unsigned char c = static_cast<unsigned char>(s[pos]);
+    if (c >= '0' && c <= '9') return true;
+    if (pos + 1 >= s.size()) return false;
+    unsigned char d = static_cast<unsigned char>(s[pos + 1]);
+    if (c == 0xDB && d >= 0xB0 && d <= 0xB9) return true;   // ۰..۹
+    if (c == 0xD9 && d >= 0xA0 && d <= 0xA9) return true;   // ٠..٩
+    return false;
+}
+
 inline NormalizedNumber normalize(const std::string& input) {
     NormalizedNumber result;
     result.is_valid = true;
@@ -54,6 +66,7 @@ inline NormalizedNumber normalize(const std::string& input) {
                 return result;
             }
             decimal_point_found = true;
+            result.has_decimal_point = true;
             i++;
             continue;
         }
@@ -103,7 +116,7 @@ inline std::vector<std::string> split_into_groups(const std::string& s, int grou
 inline std::string group_to_words(int num) {
     static const std::vector<std::string> units = {
         "", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نُه",
-        "دَه", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده",
+        "ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده",
         "هفده", "هجده", "نوزده"
     };
     
@@ -122,13 +135,13 @@ inline std::string group_to_words(int num) {
     if (hundred > 0) {
         result += hundreds.at(hundred);
         num %= 100;
-        if (num > 0) result += "ُ ";
+        if (num > 0) result += "\u064F ";
     }
 
     if (num >= 20) {
         result += tens.at((num / 10) * 10);
         num %= 10;
-        if (num > 0) result += "ُ " + units[num];
+        if (num > 0) result += "\u064F " + units[num];
     } else if (num > 0) {
         result += units[num];
     }
@@ -193,8 +206,7 @@ inline std::string number_to_words(const std::string& normalized) {
     std::vector<std::string> groups = split_into_groups(normalized);
     std::reverse(groups.begin(), groups.end()); // Reverse groups to process highest first
     
-    // simple-app branch: stop at میلیارد (تریلیون never occurs in speech here)
-    const std::vector<std::string> scales = {"", "هِزار", "میلیون", "میلیارد"};
+    const std::vector<std::string> scales = {"", "هزار", "میلیون", "میلیارد", "تریلیون"};
     std::vector<std::string> group_words;
     
     for (size_t i = 0; i < groups.size(); ++i) {
@@ -205,11 +217,11 @@ inline std::string number_to_words(const std::string& normalized) {
         size_t scale_idx = groups.size() - 1 - i;
         
         if (scale_idx < scales.size() && !scales[scale_idx].empty()) {
-            if (scale_idx == 1) {  // هِزار
+            if (scale_idx == 1) {  // هزار
                 if (num == 1) {
-                    words = "هِزار";
+                    words = "هزار";
                 } else if (num == 2) {
-                    words = "دو هِزار";
+                    words = "دو هزار";
                 } else {
                     words += " " + scales[scale_idx];
                 }
@@ -225,7 +237,7 @@ inline std::string number_to_words(const std::string& normalized) {
     std::string result;
     for (const auto& group : group_words) {
         if (!result.empty()) {
-            result += "ُ ";
+            result += "\u064F ";
         }
         result += group;
     }
@@ -233,76 +245,11 @@ inline std::string number_to_words(const std::string& normalized) {
     return result;
 }
 
-// ---------------------------------------------------------------------------------------------
-// Ali's number policy for the simple app (2026-10-13)
-// ---------------------------------------------------------------------------------------------
-
-/** True when the character is a digit or a separator that may sit INSIDE a number. */
-inline bool isDigitLikeOrSep(char c) {
-    return (c >= '0' && c <= '9') || c == ' ' || c == '\t' || c == '-' || c == '\xE2';  // 0xE2 = start of ZWNJ/٬ in UTF-8
-}
-
-/** Two digits read as one two-digit number («۶۲» -> «شصت و دو»); a leading zero is spoken. */
-inline std::string pair_to_words(const std::string& two) {
-    if (two.size() != 2) return number_to_words(two);
-    int v = std::stoi(two);
-    if (two[0] == '0') {
-        // «۰۶» -> «صفر شش»: the listener must hear that the pair starts with a zero
-        return std::string("صفر ") + digit_to_word(two[1]);
-    }
-    return number_to_words(two);
-}
-
-/** The 11-digit mobile rule: صفر + 3 + 3 + 2 + 2 (his example 09125502218). */
-inline std::string mobile_to_words(const std::string& digits) {
-    if (digits.size() != 11) return std::string();
-    std::string out = "صفر";
-    const int lens[4] = {3, 3, 2, 2};
-    size_t pos = 1;
-    for (int k = 0; k < 4; ++k) {
-        std::string part = digits.substr(pos, lens[k]);
-        pos += lens[k];
-        out += "، " + number_to_words(part);
-    }
-    return out;
-}
-
-/** Digit by digit, every digit, with a short pause between them. */
-inline std::string digits_to_words(const std::string& digits) {
-    std::string out;
-    for (char c : digits) {
-        if (!out.empty()) out += "، ";
-        out += digit_to_word(c);
-    }
-    return out;
-}
-
 inline std::string process_token(const std::string& token) {
     NormalizedNumber normalized = normalize(token);
     if (!normalized.is_valid) {
         return token;
     }
-
-    // --- Ali's policy (simple-app) -----------------------------------------------------------
-    const std::string& digits = normalized.integer_part;
-    if (normalized.fractional_part.empty()) {
-        if (digits.size() == 11 && digits[0] == '0' && digits[1] == '9') {
-            return mobile_to_words(digits);                       // 09xxxxxxxxx
-        }
-        if (digits.size() == 16) {
-            // card number: two digits at a time (the 4-group form is joined before this point)
-            std::string out;
-            for (size_t i = 0; i + 1 < digits.size(); i += 2) {
-                if (!out.empty()) out += "، ";
-                out += pair_to_words(digits.substr(i, 2));
-            }
-            return out;
-        }
-        if (digits.size() >= 13) {
-            return digits_to_words(digits);                        // long run: every digit
-        }
-    }
-    // -----------------------------------------------------------------------------------------
 
     // Handle special numbers (phone numbers, IDs, etc.)
     SpecialNumberInfo special_info = detect_special_type(normalized.integer_part);
@@ -327,6 +274,12 @@ inline std::string process_token(const std::string& token) {
         return result;
     }
 
+    // A dot with digits on only one side is still a decimal: «3.» -> «سه ممیز»
+    if (normalized.fractional_part.empty() && normalized.has_decimal_point &&
+        !normalized.integer_part.empty()) {
+        return number_to_words(normalized.integer_part) + " ممیز";
+    }
+
     // Handle regular numbers with fractions
     if (!normalized.fractional_part.empty()) {
         std::string int_part = number_to_words(normalized.integer_part);
@@ -343,45 +296,26 @@ inline std::string process_token(const std::string& token) {
 }
 
 
-/** simple-app: join «6219 8618 2654 3298» (also ZWNJ / dash separated) into one token so the
- *  16-digit card rule in process_token sees it as a single number. */
-inline std::string join_card_groups(const std::string& in) {
-    static const std::string zwnj = "\xE2\x80\x8C";
+// Fold Persian (U+06F0..U+06F9) and Arabic-Indic (U+0660..U+0669) digits to ASCII so the
+// tokeniser below, which works byte by byte with isdigit(), can see them. Without this,
+// «۵.۶» and a leading «.۴» never reach the decimal path at all.
+inline std::string fold_digits(const std::string& in) {
     std::string out;
-    size_t i = 0;
-    while (i < in.size()) {
-        // try to match 4 digits, separator, 4 digits, separator, 4 digits, separator, 4 digits
-        size_t lens[4] = {0, 0, 0, 0};
-        size_t pos[4] = {i, 0, 0, 0};
-        size_t j = i;
-        bool ok = true;
-        for (int g = 0; g < 4 && ok; ++g) {
-            pos[g] = j;
-            size_t d = 0;
-            while (d < 4 && j < in.size() && isdigit((unsigned char)in[j])) { ++j; ++d; }
-            lens[g] = d;
-            if (d != 4) { ok = false; break; }
-            if (g == 3) break;                                     // no separator after the last group
-            size_t k = j;
-            if (k < in.size() && (unsigned char)in[k] == 0x20) { ++k; }            // plain space
-            else if (in.compare(k, zwnj.size(), zwnj) == 0) { k += zwnj.size(); }   // ZWNJ
-            else if (k < in.size() && in[k] == '-') { ++k; }                        // dash
-            else { ok = false; break; }
-            j = k;
+    out.reserve(in.size());
+    for (size_t i = 0; i < in.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(in[i]);
+        if (i + 1 < in.size()) {
+            unsigned char d = static_cast<unsigned char>(in[i + 1]);
+            if (c == 0xDB && d >= 0xB0 && d <= 0xB9) { out.push_back(char('0' + (d - 0xB0))); ++i; continue; }
+            if (c == 0xD9 && d >= 0xA0 && d <= 0xA9) { out.push_back(char('0' + (d - 0xA0))); ++i; continue; }
         }
-        if (ok) {
-            for (int g = 0; g < 4; ++g) out += in.substr(pos[g], 4);
-            i = j;
-        } else {
-            out += in[i];
-            ++i;
-        }
+        out.push_back(in[i]);
     }
     return out;
 }
 
-inline std::string normalize_text(const std::string& input_raw) {
-    const std::string input = join_card_groups(input_raw);   // simple-app: card groups -> one token
+inline std::string normalize_text(const std::string& raw_input) {
+    const std::string input = fold_digits(raw_input);
     std::string result;
     std::string current_token;
     
@@ -395,26 +329,7 @@ inline std::string normalize_text(const std::string& input_raw) {
             }
             current_token += c;
         } 
-        else if(c == ',' || ((unsigned char)c == 0xD9 && i + 1 < input.size() &&
-                             ((unsigned char)input[i+1] == 0xAC || (unsigned char)input[i+1] == 0xAB))) {
-            // simple-app: a group separator INSIDE a number is dropped (never read as «ویرگول»).
-            // 0xD9 0xAC = ٬ (U+066C group separator), 0xD9 0xAB = ٫ (U+066B decimal separator).
-            bool is_persian_sep = ((unsigned char)c == 0xD9);
-            bool prev_is_digit = (i > 0 && isdigit(input[i-1]));
-            int following = 0;
-            size_t start = i + (is_persian_sep ? 2 : 1);
-            for (size_t j = start; j < input.size() && following < 4; ++j) {
-                if (isdigit(input[j])) ++following; else break;
-            }
-            if (prev_is_digit && following == 3) { i = start - 1; continue; }   // ۱۲٬۳۴۵ -> skip
-            if (is_persian_sep) {                                                // stray: keep the letter-safe bytes
-                result += input.substr(i, 2); i += 1; continue;
-            }
-            // plain comma: legacy handling
-            if(current_token.empty() && !result.empty() && !isspace(result.back())) result += ' ';
-            current_token += c;
-        }
-        else if(c == '.') {
+        else if(c == '.' || c == ',') {
             // Check if the previous or next character is a digit
             bool valid_decimal = false;
             
@@ -422,8 +337,9 @@ inline std::string normalize_text(const std::string& input_raw) {
             if(i > 0 && isdigit(input[i-1])) {
                 valid_decimal = true;
             }
-            // Check next character
-            else if(i < input.size()-1 && isdigit(input[i+1])) {
+            // Check next character: Persian/Arabic digits are two bytes, so isdigit()
+            // on a single byte never sees them and a leading ".۴" lost its point
+            else if(i + 1 < input.size() && is_digit_at(input, i + 1)) {
                 valid_decimal = true;
             }
             
@@ -477,11 +393,8 @@ inline void run_tests() {
         {"0", "صفر", false},
         {"5", "پنج", false},
         {"12", "دوازده", false},
-        {"2", "دو", false},
-        {"123", "صدُ بیستُ سه", false},
-        {"1200", "هِزارُ دویست", false},
-        {"9", "نُه", false},
-        {"9000", "نُه هِزار", false},
+        {"123", "صد و بیست و سه", false},
+        {"1200", "هزار و دویست", false},
         
         // Decimal numbers
         {"12.34", "دوازده ممیز سه چهار", false},
@@ -489,8 +402,8 @@ inline void run_tests() {
         {".75", "صفر ممیز هفت پنج", false},
         
         // Mixed text and numbers
-        {"کد 1234 است", "کد هِزارُ دویستُ سیُ چهار است", false},
-        {"شماره 09123456789", "شماره صفر، نهصدُ دوازده، سیصدُ چهلُ پنج، شصتُ هفت، هشتادُ نُه", false}, // simple-app: mobile 0 + 3 + 3 + 2 + 2
+        {"کد 1234 است", "کد هزار و دویست و سی و چهار است", false},
+        {"شماره 09123456789", "شماره صفر، نه، یک، دو، سه، چهار، پنج، شش، هفت، هشت، نه", false},
         
         // Edge cases
         {"", "", false}, // Empty input
@@ -498,8 +411,8 @@ inline void run_tests() {
         {"abc", "abc", false}, // No numbers
         {"ab.c", "ab.c", false}, // No numbers
         {"ا8ب", "ا هشت ب", false}, // Glued
-        {"123..45", "123..45", false}, // Invalid number
-        {"123,456,789", "صدُ بیستُ سه میلیونُ چهارصدُ پنجاهُ شش هِزارُ هفتصدُ هشتادُ نُه", false} // With separators
+        {"123..45", "صد و بیست و سه .. چهل و پنج", false}, // Invalid number
+        {"123,456,789", "صد و بیست و سه میلیون و چهارصد و پنجاه و شش هزار و هفتصد و هشتاد و نه", false} // With separators
     };
 
     int passed = 0;

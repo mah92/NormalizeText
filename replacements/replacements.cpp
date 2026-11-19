@@ -5,6 +5,7 @@
 #include "arabic/normalize_numbers_arabic.h"
 #include "english/normalize_numbers_english.h"
 #include "persian/normalize_numbers_persian.h"
+#include "persian/persian_extra_rules.h"
 
 #include "arabic/arabic_symbols.h"
 #include "persian/persian_symbols.h"
@@ -49,6 +50,14 @@ std::string performGeneralReplacements(Language mainlang, const std::string& inp
 
     // Byte/bit unit replacements
     applyBitByteReplacements(result);
+
+    // Persian number FORMATS first: they need the patterns intact. The two flattening rules below
+    // are language-neutral and would turn «12:30» into «12 30» and «1/2» into «1 2».
+    // Ali (2026-10-09): clock -> «دوازده و سی دقیقه», dates -> «1400، 05، 12» (a pause),
+    // ordinals -> «پنجم», fractions -> «یک دوم».
+    if (mainlang == Language::PERSIAN) {
+        persian_extra::apply(result);
+    }
 
     // Remove number separators
     // 204:20 -> 04 20
